@@ -11,6 +11,57 @@ elif m>1:
 w = input()
 [print(i) for i in l if w.lower() in i.lower()] """
 
+""" s = input()
+news = ''
+for i in range(len(s)):
+    if i%3!=0:
+        news += s[i]
+print(news) """
+
+""" s = input()
+news = s[:s.find('h')]+s[s.rfind('h'):s.find('h'):-1]+s[s.rfind('h'):]
+print(news)   """    
+
+
+""" print(list(range(2, int(input())+1))[::2]) """
+
+""" list1 = [int(i) for i in input().split(' ')]
+list2 = [int(i) for i in input().split(' ')]
+output = []
+for i in range(len(list1)):
+    output.append(list1[i]+list2[i])
+print(*output) """
+
+""" s = input().split(' ')
+list_num = [int(i) for i in s]
+list_sum = [i+'+' for i in s]
+list_sum[-1] = s[-1]+'=' 
+print(''.join(list_sum), sum(list_num), sep='') """
+
+""" s = input().split('-')
+
+try:
+    if len(s)==3 and len(s[-1])==4 and s[-1].isdigit()==True and len(s[-2])==3 and s[-2].isdigit()==True and len(s[-3])==3 and s[-3].isdigit()==True:
+        flag = 1
+    elif len(s)==4 and len(s[-1])==4 and s[-1].isdigit()==True and len(s[-2])==3 and s[-2].isdigit()==True and len(s[-3])==3 and s[-3].isdigit()==True and len(s[-4])==1 and int(s[-4])==7:
+        flag = 1
+    else:
+        flag = 0
+except:
+    flag = 0
+
+if flag == 1:
+    print('YES')
+else:
+    print('NO') """
+
+
+""" print(max([len(i) for i in input().split(' ')])) """
+
+
+""" print(*[i[1:]+i[0]+'ки' for i in input().split(' ')]) """
+
+
 """ l = [i for i in input().split(' ') if i.lower() in ['a', 'an', 'the']]
 print(f'Общее количество артиклей: {len(l)}') """
 
