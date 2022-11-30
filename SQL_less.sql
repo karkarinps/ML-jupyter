@@ -23,3 +23,55 @@ FROM book b INNER JOIN author a /* 2. соединяем первую пару �
 USING (author_id)/* 3. соединение по стобцам author_id обеих таблиц */
 INNER JOIN supply s /* 4. соединяем предыдущую пару с третьей таблицей supply */
 ON s.title=b.title and s.price=b.price /* 5. соединяем по столбцам название и цена, которые должны быть одинаковы, чтобы попасть в итоговую таблицу */
+
+
+SELECT bb.buy_id, name_client, SUM(bb.amount*b.price) AS Стоимость
+FROM book b INNER JOIN buy_book bb ON b.book_id=bb.book_id
+INNER JOIN buy ON buy.buy_id=bb.buy_id
+INNER JOIN client c ON c.client_id=buy.client_id
+GROUP BY buy_id
+ORDER BY buy_id ASC;
+
+
+UPDATE book
+SET genre_id = (SELECT genre_id FROM genre WHERE name_genre = 'Поэзия')
+WHERE book_id = 10;
+
+
+UPDATE book
+SET genre_id = (SELECT genre_id FROM genre WHERE name_genre = 'Приключения')
+WHERE book_id = 11;
+ 
+
+DELETE FROM author
+WHERE author_id IN (SELECT author_id FROM book GROUP BY author_id HAVING SUM(amount) < 20);
+ 
+ 
+DELETE FROM author
+USING author INNER JOIN book ON author.author_id=book.author_id
+WHERE book.author_id IN (SELECT author_id FROM book INNER JOIN genre ON book.genre_id=genre.genre_id WHERE name_genre =
+                  'Поэзия');
+ 
+SELECT * FROM book;
+ 
+ 
+SELECT buy.buy_id, b.title, b.price, bb.amount
+FROM book b INNER JOIN buy_book  bb ON b.book_id = bb.book_id
+INNER JOIN buy ON buy.buy_id = bb.buy_id
+INNER JOIN client c ON c.client_id = buy.client_id
+WHERE name_client = 'Баранов Павел'
+ORDER BY buy_id ASC, title ASC;
+ 
+ 
+SELECT a.name_author, b.title, COUNT(bb.amount) AS Количество
+FROM author a INNER JOIN book b ON a.author_id = b.author_id
+LEFT JOIN buy_book bb ON b.book_id = bb.book_id
+GROUP BY name_author, title
+ORDER BY name_author ASC, title ASC;
+ 
+
+SELECT c.name_city, COUNT(buy.client_id) AS Количество
+FROM buy RIGHT JOIN client cl ON buy.client_id = cl.client_id
+INNER JOIN city c ON c.city_id = cl.city_id
+GROUP BY c.name_city
+ORDER BY Количество DESC, name_city ASC;
