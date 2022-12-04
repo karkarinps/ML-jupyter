@@ -75,3 +75,40 @@ FROM buy RIGHT JOIN client cl ON buy.client_id = cl.client_id
 INNER JOIN city c ON c.city_id = cl.city_id
 GROUP BY c.name_city
 ORDER BY Количество DESC, name_city ASC;
+
+
+SELECT title, SUM(Количество) AS Количество, SUM(Сумма) AS Сумма
+FROM
+(SELECT title, SUM(bb.amount) AS Количество, SUM(b.price*bb.amount) AS Сумма
+FROM book b INNER JOIN buy_book bb USING(book_id)
+INNER JOIN buy_step bs USING(buy_id)
+WHERE step_id=1 AND date_step_end IS NOT NULL
+GROUP BY title
+UNION ALL
+SELECT title, SUM(ba.amount) AS Количество, SUM(ba.price*ba.amount) AS Сумма
+FROM buy_archive ba INNER JOIN book b USING(book_id)
+GROUP BY title)query_in
+GROUP BY title
+ORDER BY Сумма DESC;
+ 
+ 
+SELECT YEAR(date_step_end) AS Год, MONTHNAME(date_step_end) AS Месяц, SUM(b.price*bb.amount) AS Сумма
+FROM book b INNER JOIN buy_book bb USING(book_id)
+INNER JOIN buy USING(buy_id)
+INNER JOIN buy_step bs USING(buy_id)
+INNER JOIN step s USING(step_id)
+WHERE step_id = 1 AND date_step_end IS NOT NULL
+GROUP BY MONTHNAME(date_step_end), YEAR(date_step_end)
+UNION
+SELECT YEAR(date_payment) AS Год, MONTHNAME(date_payment) AS Месяц, SUM(ba.price*ba.amount) AS Сумма
+FROM buy_archive ba
+GROUP BY MONTHNAME(date_payment), YEAR(date_payment)
+ORDER BY Месяц ASC, Год ASC;
+ 
+
+SELECT name_genre, SUM(bb.amount) AS Количество
+FROM genre g INNER JOIN book b ON g.genre_id=b.genre_id
+INNER JOIN buy_book bb ON b.book_id=bb.book_id
+GROUP BY name_genre
+HAVING SUM(bb.amount) IN (SELECT MAX(Количество) FROM (SELECT SUM(bb.amount) AS Количество FROM genre g INNER JOIN book b ON g.genre_id=b.genre_id
+INNER JOIN buy_book bb ON b.book_id=bb.book_id GROUP BY name_genre)query_in);
