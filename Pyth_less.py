@@ -1,3 +1,53 @@
+""" 
+def compute_binom(n, k):
+    n_fac = 1
+    for i in range(1, n+1):
+        n_fac *= i
+    k_fac = 1
+    for i in range(1, k+1):
+        k_fac *= i 
+    n_k_fac = 1
+    for i in range(1, n-k+1):
+        n_k_fac *= i
+    return int(n_fac/(k_fac*n_k_fac))
+
+
+n = int(input())
+k = int(input())
+
+
+print(compute_binom(n, k)) """
+
+
+""" 
+def is_magic(date):
+    if int(date[:2])*int(date[3:5])==int(date[-2:]):
+        return True
+    else:
+        return False
+
+
+date = input()
+
+
+print(is_magic(date)) """
+
+
+""" d = {1: 'один', 2: 'два', 3: 'три', 4: 'четыре', 5: 'пять', 6: 'шесть', 7: 'семь', 8: 'восемь', 9: 'девять', 10: 'десять', 11: 'одиннадцать', 12: 'двенадцать', 13: 'тринадцать', 14: 'четырнадцать', 15: 'пятнадцать', 16: 'шестнадцать',17: 'семнадцать', 18: 'восемнадцать', 19: 'девятнадцать', 20: 'двадцать', 30: 'тридцать', 40: 'сорок', 50: 'пятьдесят', 60: 'шестьдесят', 70: 'семьдесят', 80: 'восемьдесят', 90: 'девяносто', 0: ' '}
+
+
+def number_to_words(num):
+    if num<=20:
+        return d[num]
+    else:
+        return d[num-num%10]+' '+d[num%10]
+
+
+n = int(input())
+
+
+print(number_to_words(n)) """
+
 """ n = input()
 m = n.count('f')
 if m==0:
