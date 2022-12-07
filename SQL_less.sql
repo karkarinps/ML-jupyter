@@ -112,3 +112,35 @@ INNER JOIN buy_book bb ON b.book_id=bb.book_id
 GROUP BY name_genre
 HAVING SUM(bb.amount) IN (SELECT MAX(Количество) FROM (SELECT SUM(bb.amount) AS Количество FROM genre g INNER JOIN book b ON g.genre_id=b.genre_id
 INNER JOIN buy_book bb ON b.book_id=bb.book_id GROUP BY name_genre)query_in);
+
+
+
+UPDATE buy_step
+SET date_step_end = '2020-04-13'
+WHERE buy_id = 5 and step_id = 1;
+ 
+UPDATE buy_step
+SET date_step_beg = '2020-04-13'
+WHERE buy_id = 5 and step_id = (SELECT step_id + 1
+FROM step
+WHERE name_step = 'Оплата');
+ 
+ 
+INSERT INTO buy_step(buy_id, step_id)
+SELECT buy_id, step_id
+FROM step s CROSS JOIN buy b
+WHERE buy_id = 5;
+
+
+
+SELECT name_student, date_attempt, result
+FROM attempt a INNER JOIN student USING(student_id)
+INNER JOIN subject ns USING(subject_id)
+WHERE name_subject = 'Основы баз данных'
+ORDER BY result DESC;
+ 
+ 
+SELECT name_subject, COUNT(a.subject_id) AS Количество, ROUND(AVG(result), 2) AS Среднее
+FROM attempt a RIGHT JOIN subject s USING(subject_id)
+GROUP BY name_subject
+ORDER BY Среднее DESC;
