@@ -144,3 +144,29 @@ SELECT name_subject, COUNT(a.subject_id) AS Количество, ROUND(AVG(resu
 FROM attempt a RIGHT JOIN subject s USING(subject_id)
 GROUP BY name_subject
 ORDER BY Среднее DESC;
+
+
+SELECT name_student, name_subject, date_attempt, ROUND((SUM(answer.is_correct)/3)*100, 2) AS Результат
+FROM attempt JOIN student USING(student_id)
+JOIN subject USING(subject_id)
+JOIN testing USING(attempt_id)
+JOIN answer USING(answer_id)
+GROUP BY name_student, name_subject, date_attempt
+ORDER BY name_student ASC, date_attempt DESC;
+ 
+SELECT name_question, name_answer, IF(is_correct = 0, 'Неверно', 'Верно') AS Результат
+FROM question q INNER JOIN answer a USING(question_id)
+INNER JOIN testing t USING(answer_id)
+WHERE attempt_id = 7;
+ 
+ 
+SELECT question_id, name_question
+FROM question q INNER JOIN subject s USING(subject_id)
+WHERE name_subject = 'Основы баз данных'
+ORDER BY RAND()
+LIMIT 3;
+ 
+SELECT name_subject, COUNT(DISTINCT student_id) AS Количество
+FROM attempt a RIGHT JOIN subject s USING(subject_id)
+GROUP BY subject_id
+ORDER BY Количество DESC, name_subject;
