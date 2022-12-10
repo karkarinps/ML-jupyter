@@ -1,3 +1,46 @@
+""" Шифр Цезаря - сдвинуть каждый символ вводимой строки на длину слова в котором он находится """
+""" задаём функцию сдвига каждого символа symb на num позиций в алфавите в том же регистре """
+""" def sdvig(symb, num):
+    abc = 'abcdefghijklmnopqrstuvwxyz'
+    symb_index = abc.find(symb.lower())
+    if symb_index + num > 25:
+        if symb.lower() == symb:
+            return abc[symb_index + num - 26]
+        else:
+            return abc[symb_index + num - 26].upper()
+    else:
+        if symb.lower() == symb:
+            return abc[symb_index + num]
+        else:
+            return abc[symb_index + num].upper() """
+""" разделение фразы на слова, побуквенное просеивание каждого слова, чтобы получить длину слова без лишних знаков
+Затем побуквенная подстановка буквы в функцию со сдвигом равным длине слова - списка
+Добавление сдвинутых букв в промежуточную пустую строку, затем добавление этой строки в пустой лист для получения
+сдвинутой фразы.
+Объединение списка по пробелам через джоин. Плоф готов. """
+""" ces_list = []
+wor = input().split()
+print(wor)
+for i in wor:
+    wor_list = []
+    ces = ''
+    for j in i:
+        if j.isalpha():
+            wor_list.append(j)
+    for k in i:
+        num = len(wor_list)
+        if k.isalpha():
+            ces += sdvig(k, num)
+        else:
+            ces += k
+    ces_list.append(ces)
+print(' '.join(ces_list)) 
+
+Конец кода шифра Цезаря"""
+
+
+
+
 """ 
 def compute_binom(n, k):
     n_fac = 1
