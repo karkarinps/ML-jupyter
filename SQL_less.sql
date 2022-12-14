@@ -170,3 +170,83 @@ SELECT name_subject, COUNT(DISTINCT student_id) AS Количество
 FROM attempt a RIGHT JOIN subject s USING(subject_id)
 GROUP BY subject_id
 ORDER BY Количество DESC, name_subject;
+
+
+UPDATE attempt
+SET result = (SELECT ROUND((SUM(answer.is_correct)/3)*100, 2) AS Результат
+FROM testing
+    JOIN answer USING(answer_id)
+             WHERE attempt_id = 8)
+WHERE attempt_id = 8;
+ 
+
+INSERT INTO testing(attempt_id, question_id)
+SELECT attempt_id, question_id
+FROM attempt a INNER JOIN question q USING(subject_id)
+WHERE attempt_id = (SELECT MAX(attempt_id) FROM attempt)
+ORDER BY RAND()
+LIMIT 3;
+
+
+SELECT name_program, name_enrollee, SUM(result) AS itog
+FROM enrollee INNER JOIN program_enrollee USING(enrollee_id)
+INNER JOIN program USING(program_id)
+INNER JOIN program_subject USING(program_id)
+INNER JOIN subject USING(subject_id)
+INNER JOIN enrollee_subject ON subject.subject_id = enrollee_subject.subject_id
+AND enrollee_subject.enrollee_id = enrollee.enrollee_id
+GROUP BY name_program, name_enrollee
+ORDER BY name_program ASC, itog DESC;
+ 
+ 
+SELECT name_program
+FROM (SELECT name_program, COUNT(name_subject) AS Количество
+FROM program p INNER JOIN program_subject ps USING(program_id)
+INNER JOIN subject s USING(subject_id)
+WHERE name_subject IN ('Информатика', 'Математика')
+GROUP BY name_program, name_subject)query_in
+GROUP BY name_program
+HAVING COUNT(Количество) = 2
+ORDER BY name_program ASC;
+ 
+ 
+SELECT name_department, name_program, plan, COUNT(program_id) AS Количество, ROUND(COUNT(program_id)/plan, 2) AS Конкурс
+FROM program_enrollee pe INNER JOIN program p USING(program_id)
+INNER JOIN department d USING(department_id)
+GROUP BY name_department, name_program, plan
+ORDER BY Конкурс DESC;
+ 
+ 
+SELECT name_enrollee, IF(SUM(bonus) IS NULL, 0, SUM(bonus)) AS Бонус  
+FROM enrollee e LEFT JOIN enrollee_achievement ea USING(enrollee_id)
+LEFT JOIN achievement a USING(achievement_id)
+GROUP BY name_enrollee
+ORDER BY name_enrollee ASC;
+ 
+ 
+SELECT name_program
+FROM program_subject ps INNER JOIN program p USING(program_id)
+GROUP BY name_program
+HAVING MIN(min_result)>=40
+ORDER BY name_program ASC;
+ 
+ 
+SELECT name_subject, COUNT(subject_id) AS Количество, MAX(result) AS Максимум,
+MIN(result) AS Минимум, ROUND(AVG(result), 1) AS Среднее
+FROM subject s INNER JOIN enrollee_subject USING(subject_id)
+GROUP BY name_subject
+ORDER BY name_subject ASC;
+ 
+ 
+SELECT name_program
+FROM program p INNER JOIN program_subject ps USING(program_id)
+INNER JOIN subject s USING(subject_id)
+WHERE name_subject = 'Информатика'
+ORDER BY name_program DESC;
+ 
+ 
+SELECT name_enrollee
+FROM program p INNER JOIN program_enrollee pe USING(program_id)
+INNER JOIN enrollee e USING(enrollee_id)
+WHERE name_program = 'Мехатроника и робототехника'
+ORDER BY name_enrollee ASC;
