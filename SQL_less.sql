@@ -250,3 +250,81 @@ FROM program p INNER JOIN program_enrollee pe USING(program_id)
 INNER JOIN enrollee e USING(enrollee_id)
 WHERE name_program = 'Мехатроника и робототехника'
 ORDER BY name_enrollee ASC;
+
+
+SELECT DISTINCT(name_program), name_enrollee
+FROM enrollee INNER JOIN program_enrollee USING(enrollee_id)
+INNER JOIN program USING(program_id)
+INNER JOIN program_subject USING(program_id)
+INNER JOIN subject USING(subject_id)
+INNER JOIN enrollee_subject ON subject.subject_id = enrollee_subject.subject_id
+AND enrollee_subject.enrollee_id = enrollee.enrollee_id
+WHERE result<min_result
+ORDER BY name_program, name_enrollee;
+----
+CREATE TABLE applicant AS
+SELECT pe.program_id, es.enrollee_id, SUM(result) AS itog
+FROM enrollee INNER JOIN program_enrollee pe USING(enrollee_id)
+INNER JOIN program USING(program_id)
+INNER JOIN program_subject USING(program_id)
+INNER JOIN subject USING(subject_id)
+INNER JOIN enrollee_subject es ON subject.subject_id = es.subject_id
+AND es.enrollee_id = enrollee.enrollee_id
+GROUP BY program_id, enrollee_id
+ORDER BY program_id, itog DESC;
+ 
+SELECT * FROM applicant
+ 
+---
+DELETE FROM applicant
+WHERE (program_id, enrollee_id) IN (SELECT p.program_id, e.enrollee_id
+FROM enrollee e INNER JOIN program_enrollee USING(enrollee_id)
+INNER JOIN program p USING(program_id)
+INNER JOIN program_subject USING(program_id)
+INNER JOIN subject USING(subject_id)
+INNER JOIN enrollee_subject ON subject.subject_id = enrollee_subject.subject_id
+AND enrollee_subject.enrollee_id = e.enrollee_id
+WHERE result<min_result);
+ 
+SELECT * FROM applicant
+ 
+--
+UPDATE applicant
+JOIN
+(SELECT enrollee_id, SUM(bonus) AS Бонус  
+FROM enrollee_achievement ea
+LEFT JOIN achievement a USING(achievement_id)
+GROUP BY enrollee_id)query_in USING(enrollee_id)
+SET itog = itog + Бонус;
+ 
+SELECT * FROM applicant
+ 
+--
+CREATE TABLE applicant_order AS
+SELECT * FROM applicant
+ORDER BY program_id, itog DESC;
+ 
+DROP TABLE applicant
+ 
+--
+ 
+ALTER TABLE applicant_order ADD str_id NUMERIC FIRST;
+ 
+SELECT * FROM applicant_order
+ 
+--
+SET @counter := 1;
+SET @id_pr_counter := 0;
+ 
+UPDATE applicant_order
+SET str_id = IF(program_id = @id_pr_counter, @counter := @counter + 1, @counter := 1 AND @id_pr_counter := @id_pr_counter + 1);
+ 
+SELECT * FROM applicant_order
+ 
+--
+CREATE TABLE student AS
+SELECT name_program, name_enrollee, itog
+FROM program p INNER JOIN applicant_order ao USING(program_id)
+INNER JOIN enrollee e USING(enrollee_id)
+WHERE str_id <= plan
+ORDER BY name_program ASC, itog DESC;
