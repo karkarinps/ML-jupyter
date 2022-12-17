@@ -1,4 +1,49 @@
-""" Шифр Цезаря - сдвинуть каждый символ вводимой строки на длину слова в котором он находится """
+
+
+""" abcdefghijklmnopqrstuvwxyz
+абвгдежзийклмнопрстуфхцчшщъыьэюяабвгдежзийклмнопрстуфхцчшщъыьэюя """
+
+""" Алгоритм дешифровки шифра Цезаря с постояным сдвигом на рандомное значение. 
+Зададим функцию, которая будет сдвигать буквы на заданную величину """
+def sdvig(symb, num):
+    abc = 'abcdefghijklmnopqrstuvwxyz'
+    symb_index = abc.find(symb.lower())
+    if symb_index - num < 0:
+        if symb.lower() == symb:
+            return abc[symb_index - num + len(abc)]
+        else:
+            return abc[symb_index - num + len(abc)].upper()
+    else:
+        if symb.lower() == symb:
+            return abc[symb_index - num]
+        else:
+            return abc[symb_index - num].upper()
+
+
+wor = input().split()                 """ Фраза для дешифровки """
+print(wor)
+range_shift = range(0, 26)        """  Диапазон предполагаемого сдвига, можно задавать любой """
+for i in range_shift:
+    ces_list = []
+    for j in wor:
+        ces = ''
+        for k in j:
+            if k.isalpha():
+                ces += sdvig(k, i)
+            else:
+                ces += k
+        ces_list.append(ces)
+    print(' '.join(ces_list))
+    print(i)
+
+
+""" Конец дешифратора Цезаря """
+
+
+
+          
+          """ Шифр Цезаря - сдвинуть каждый символ вводимой строки на длину слова в котором он находится """
+
 """ задаём функцию сдвига каждого символа symb на num позиций в алфавите в том же регистре """
 """ def sdvig(symb, num):
     abc = 'abcdefghijklmnopqrstuvwxyz'
@@ -17,7 +62,7 @@
 Затем побуквенная подстановка буквы в функцию со сдвигом равным длине слова - списка
 Добавление сдвинутых букв в промежуточную пустую строку, затем добавление этой строки в пустой лист для получения
 сдвинутой фразы.
-Объединение списка по пробелам через джоин. Плоф готов. """
+Объединение списка по пробелам через джоин. """
 """ ces_list = []
 wor = input().split()
 print(wor)
@@ -37,8 +82,6 @@ for i in wor:
 print(' '.join(ces_list)) 
 
 Конец кода шифра Цезаря"""
-
-
 
 
 """ 
