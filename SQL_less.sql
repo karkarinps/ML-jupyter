@@ -328,3 +328,41 @@ FROM program p INNER JOIN applicant_order ao USING(program_id)
 INNER JOIN enrollee e USING(enrollee_id)
 WHERE str_id <= plan
 ORDER BY name_program ASC, itog DESC;
+
+
+SELECT product_id, name, price,
+CASE
+WHEN name IN ('сахар', 'сухарики', 'сушки', 'семечки',
+'масло льняное', 'виноград', 'масло оливковое',
+'арбуз', 'батон', 'йогурт', 'сливки', 'гречка',
+'овсянка', 'макароны', 'баранина', 'апельсины',
+'бублики', 'хлеб', 'горох', 'сметана', 'рыба копченая',
+'мука', 'шпроты', 'сосиски', 'свинина', 'рис',
+'масло кунжутное', 'сгущенка', 'ананас', 'говядина',
+'соль', 'рыба вяленая', 'масло подсолнечное', 'яблоки',
+'груши', 'лепешка', 'молоко', 'курица', 'лаваш', 'вафли', 'мандарины') THEN ROUND((price * 10 / 110), 2)
+ELSE ROUND((price * 20 / 120), 2)
+END AS tax
+, CASE
+WHEN name IN ('сахар', 'сухарики', 'сушки', 'семечки',
+'масло льняное', 'виноград', 'масло оливковое',
+'арбуз', 'батон', 'йогурт', 'сливки', 'гречка',
+'овсянка', 'макароны', 'баранина', 'апельсины',
+'бублики', 'хлеб', 'горох', 'сметана', 'рыба копченая',
+'мука', 'шпроты', 'сосиски', 'свинина', 'рис',
+'масло кунжутное', 'сгущенка', 'ананас', 'говядина',
+'соль', 'рыба вяленая', 'масло подсолнечное', 'яблоки',
+'груши', 'лепешка', 'молоко', 'курица', 'лаваш', 'вафли', 'мандарины') THEN ROUND((price - (price * 10 / 110)), 2)
+ELSE ROUND((price - (price * 20 / 120)), 2)
+END AS price_before_tax
+FROM products
+ORDER BY price_before_tax DESC;
+ 
+SELECT COUNT(order_id) AS orders_count
+FROM orders
+WHERE array_length(product_ids, 1) >= 9;
+ 
+ 
+SELECT ROUND(AVG(price), 2) AS avg_price
+FROM products
+WHERE (name NOT LIKE '%иван-чай%' AND name NOT LIKE '%чайный гриб%') AND (name LIKE '%чай%' OR name LIKE '%кофе%')
