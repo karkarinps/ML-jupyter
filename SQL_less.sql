@@ -366,3 +366,29 @@ WHERE array_length(product_ids, 1) >= 9;
 SELECT ROUND(AVG(price), 2) AS avg_price
 FROM products
 WHERE (name NOT LIKE '%иван-чай%' AND name NOT LIKE '%чайный гриб%') AND (name LIKE '%чай%' OR name LIKE '%кофе%')
+
+
+SELECT SUM(CASE
+WHEN name = 'сухарики' THEN 3*price
+WHEN name = 'чипсы' THEN 2*price
+WHEN name = 'энергетический напиток' THEN 1*price
+END) AS order_price
+FROM products
+ 
+ 
+SELECT (COUNT(DISTINCT user_id) FILTER (WHERE action = 'create_order') - COUNT(DISTINCT user_id) FILTER
+(WHERE action = 'cancel_order')) AS users_count
+FROM user_actions
+ 
+ 
+SELECT sex, COUNT(DISTINCT courier_id) AS couriers_count
+FROM couriers
+GROUP BY sex
+ORDER BY couriers_count ASC;
+ 
+ 
+SELECT DATE_PART('year', AGE(current_date, birth_date)) AS age, COUNT(DISTINCT user_id) AS users_count, sex
+FROM users
+WHERE birth_date IS NOT NULL
+GROUP BY age, sex
+ORDER BY age ASC;
