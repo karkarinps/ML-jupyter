@@ -392,3 +392,59 @@ FROM users
 WHERE birth_date IS NOT NULL
 GROUP BY age, sex
 ORDER BY age ASC;
+
+
+SELECT DATE_PART('year', AGE(current_date, birth_date)) AS age, sex, COUNT(DISTINCT user_id) AS users_count
+FROM users
+WHERE birth_date IS NOT NULL
+GROUP BY age, sex
+ORDER BY age ASC;
+ 
+SELECT DATE_TRUNC('month', time) AS month, action, COUNT(order_id) AS orders_count
+FROM user_actions
+GROUP BY month, action
+ORDER BY month, action;
+ 
+SELECT array_length(product_ids, 1) AS order_size, COUNT(order_id) AS orders_count
+FROM orders
+GROUP BY order_size
+HAVING COUNT(order_id) > 5000
+ORDER BY order_size ASC;
+ 
+SELECT courier_id, COUNT(order_id) AS delivered_orders
+FROM courier_actions
+WHERE DATE_PART('month', time) = 9 AND DATE_PART('year', time) = 2022
+AND action = 'deliver_order'
+GROUP BY courier_id
+ORDER BY delivered_orders DESC
+LIMIT 5;
+ 
+SELECT courier_id, COUNT(order_id) AS delivered_orders
+FROM courier_actions
+WHERE DATE_PART('month', time) = 9 AND DATE_PART('year', time) = 2022
+AND action = 'deliver_order'
+GROUP BY courier_id
+HAVING COUNT(order_id) = 1;
+ 
+SELECT user_id
+FROM user_actions
+WHERE action = 'create_order'
+GROUP BY user_id
+HAVING DATE_PART('month', MAX(time)) < 9 AND DATE_PART('year', MAX(time)) = 2022
+ORDER BY user_id ASC;
+ 
+SELECT user_id, ROUND(COUNT(action) FILTER (WHERE action = 'cancel_order')/CAST(COUNT(DISTINCT user_id) AS DECIMAL), 2) AS cancel_rate
+FROM user_actions
+GROUP BY user_id
+ORDER BY cancel_rate DESC;
+ 
+SELECT CASE
+WHEN DATE_PART('year', AGE(current_date, birth_date)) BETWEEN 19 AND 24 THEN '19-24'
+WHEN DATE_PART('year', AGE(current_date, birth_date)) BETWEEN 25 AND 29 THEN '25-29'
+WHEN DATE_PART('year', AGE(current_date, birth_date)) BETWEEN 30 AND 35 THEN '30-35'
+WHEN DATE_PART('year', AGE(current_date, birth_date)) BETWEEN 36 AND 41 THEN '36-41'
+END AS group_age, COUNT(DISTINCT user_id) AS users_count
+FROM users
+WHERE DATE_PART('year', AGE(current_date, birth_date)) BETWEEN 19 AND 41
+GROUP BY group_age
+ORDER BY group_age ASC;
