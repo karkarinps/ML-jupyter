@@ -448,3 +448,75 @@ FROM users
 WHERE DATE_PART('year', AGE(current_date, birth_date)) BETWEEN 19 AND 41
 GROUP BY group_age
 ORDER BY group_age ASC;
+
+/* ТЕСТОВОЕ ДАТА-АНАЛИТИК */
+SELECT Vendor 
+FROM T1 
+UNION SELECT Vendor 
+FROM T2;
+
+
+SELECT * FROM BOOKS WHERE PUBLISHER IN (‘Мысль’, ‘Азбука’);
+SELECT * FROM BOOKS WHERE PUBLISHER =‘Мысль’ or PUBLISHER = ‘Азбука’;
+SELECT * FROM BOOKS WHERE PUBLISHER =‘Мысль’ UNION select * from BOOKS where PUBLISHER = ‘Азбука’;
+
+
+WITH subq AS (SELECT NUM 
+FROM T2)
+SELECT DISTINCT NUM
+FROM T1
+WHERE NUM NOT IN (SELECT * FROM subq);
+
+
+SELECT DISTINCT T1.NUM
+FROM T1 LEFT JOIN 
+T2 ON T1.NUM = T2.NUM
+WHERE T2.NUM IS NULL;
+
+
+WITH CTE AS
+(SELECT *,ROW_NUMBER() OVER (PARTITION BY NUM ORDER BY NUM) AS RN
+FROM T)
+DELETE FROM CTE WHERE RN<>1;
+
+
+WITH CTE AS (SELECT Fil, SUM(Sales) AS Sales, SUM(Plan, %) AS Plan
+FROM T1
+GROUP BY Fil
+ORDER BY Plan DESC
+LIMIT 3)
+SELECT *, ROW_NUMBER() OVER (ORDER BY Plan DESC) AS Place
+FROM CTE;
+
+
+WITH CTE AS (SELECT Department, COUNT(id) AS cnt_id 
+FROM Employees GROUP BY Department)
+SELECT Department FROM CTE 
+WHERE cnt_id IN ((SELECT MAX(cnt_id) FROM CTE), (SELECT MAX(cnt_id) FROM CTE));
+
+
+SELECT DATE_PART(‘month’, Date::DATE) AS Months, SUM(Salary) AS Month_salary
+FROM Salary
+GROUP BY Months
+ORDER BY Months DESC;
+
+
+SELECT DISTINCT CASE WHEN Salary < 50000 THEN FullName END AS Less50,
+CASE WHEN Salary > 50000 THEN FullName END AS More50
+FROM Salary s INNER JOIN Employees e ON s.Employeeid = e.id;
+
+
+RENAME TABLE Employees TO Workers;
+ALTER TABLE Workers ADD Comment nvarchar(255) NULL;
+
+
+SELECT Employeeid, ROW_NUMBER() OVER (ORDER BY Salary DESC) AS seq_num 
+FROM Salary
+WHERE DATE_PART(‘month’, Date::DATE) = 4
+
+
+
+
+
+
+
