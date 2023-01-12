@@ -515,6 +515,70 @@ FROM Salary
 WHERE DATE_PART(‘month’, Date::DATE) = 4
 
 
+WITH CTE AS (SELECT ROUND(AVG(order_avg), 2) AS orders_avg
+FROM (SELECT COUNT(DISTINCT order_id) as order_avg
+FROM user_actions
+GROUP BY user_id) AS query_in)
+
+SELECT user_id, COUNT(DISTINCT order_id) AS orders_count, orders_avg AS orders_avg, COUNT(DISTINCT order_id) - orders_avg AS orders_diff 
+FROM CTE, user_actions
+GROUP BY user_id, orders_avg 
+ORDER BY user_id asc
+LIMIT 1000;
+
+
+SELECT order_id, product_ids
+FROM orders
+WHERE order_id IN (SELECT order_id FROM courier_actions WHERE action = 'deliver_order' ORDER BY
+time DESC LIMIT 100)
+ORDER BY order_id ASC;
+
+
+SELECT courier_id, birth_date, sex
+FROM couriers
+WHERE courier_id IN (SELECT courier_id FROM courier_actions WHERE action = 'deliver_order' AND DATE_PART('month', time::DATE) = 9 AND DATE_PART('year', time::DATE) = 2022
+GROUP BY courier_id
+HAVING COUNT(action) >= 30)
+ORDER BY courier_id ASC;
+
+
+SELECT product_id, name, price, CASE 
+WHEN price > (SELECT ROUND(AVG(price), 2) FROM products)+50 THEN price*0.85
+WHEN price < (SELECT ROUND(AVG(price), 2) FROM products)-50 THEN price*0.9
+ELSE price
+END AS new_price
+FROM products
+ORDER BY price DESC, product_id ASC;
+
+
+SELECT *, unnest(product_ids) AS product_id
+FROM orders
+LIMIT 100;
+
+
+SELECT product_id, COUNT(product_id) AS times_purchased
+FROM (SELECT *, unnest(product_ids) AS product_id FROM orders) subt
+GROUP BY product_id
+ORDER BY times_purchased DESC
+LIMIT 10;
+
+
+SELECT DISTINCT order_id, product_ids
+FROM (SELECT *, unnest(product_ids) AS product_id FROM orders) subt
+WHERE product_id IN (SELECT product_id
+FROM products
+ORDER BY price DESC 
+LIMIT 5)
+ORDER BY order_id ASC;
+
+
+WITH CTE AS (SELECT user_id, DATE_PART('year', AGE((SELECT MAX(time) FROM user_actions)::DATE, birth_date)) AS age
+FROM users)
+SELECT user_id, FLOOR(COALESCE((SELECT DATE_PART('year', AGE((SELECT MAX(time) FROM user_actions)::DATE, birth_date))), (SELECT AVG(age) FROM CTE))) AS age 
+FROM users 
+ORDER BY user_id ASC;
+
+
 
 
 
