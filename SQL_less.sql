@@ -579,7 +579,75 @@ FROM users
 ORDER BY user_id ASC;
 
 
+SELECT u.birth_date AS users_birth_date, users_count, c.birth_date AS couriers_birth_date, couriers_count
+FROM (SELECT birth_date, COUNT(user_id) AS users_count
+FROM users
+WHERE birth_date IS NOT NULL
+GROUP BY birth_date) u
+FULL JOIN 
+(SELECT birth_date, COUNT(courier_id) AS couriers_count
+FROM couriers
+WHERE birth_date IS NOT NULL
+GROUP BY birth_date) c USING(birth_date)
+ORDER BY users_birth_date ASC, couriers_birth_date ASC;
 
+
+-----
+SELECT COUNT(DISTINCT birth_date) AS dates_count
+FROM (SELECT birth_date
+FROM users
+WHERE birth_date IS NOT NULL
+UNION
+SELECT birth_date
+FROM couriers
+WHERE birth_date IS NOT NULL)q1;
+
+----
+WITH subq AS (SELECT order_id 
+FROM user_actions
+WHERE action = 'cancel_order')
+
+SELECT user_id, ROUND(AVG(array_length), 2) AS avg_order_size
+FROM
+(SELECT ua.user_id, array_length(product_ids, 1)
+FROM (SELECT user_id, order_id
+FROM user_actions
+WHERE order_id NOT IN (SELECT * FROM subq)) ua INNER JOIN orders o USING(order_id)
+ORDER BY ua.user_id ASC, ua.order_id ASC) AS foo
+GROUP BY user_id
+LIMIT 1000;
+
+----
+SELECT order_id, SUM(price) AS order_price
+FROM 
+(SELECT order_id, product_id, price
+FROM (SELECT *, unnest(product_ids) AS product_id FROM orders) subq INNER JOIN products USING(product_id)
+ORDER BY order_id ASC, product_id ASC) subq1
+GROUP BY order_id
+ORDER BY order_id ASC
+LIMIT 1000; 
+
+---
+SELECT user_id, COUNT(order_id) AS orders_count, ROUND(AVG(array_length), 2) AS avg_order_size, ROUND(SUM(order_price), 2) AS sum_order_value, ROUND(SUM(order_price)/COUNT(order_id), 2) AS avg_order_value,
+MIN(order_price) AS min_order_value, MAX(order_price) AS max_order_value
+FROM (SELECT order_id, SUM(price) AS order_price
+FROM 
+(SELECT order_id, product_id, price
+FROM (SELECT *, unnest(product_ids) AS product_id FROM orders) subq INNER JOIN products USING(product_id)
+ORDER BY order_id ASC, product_id ASC) subq1
+GROUP BY order_id
+ORDER BY order_id ASC) alisu
+INNER JOIN
+(SELECT ua.user_id, array_length(product_ids, 1), order_id
+FROM (SELECT user_id, order_id
+FROM user_actions
+WHERE order_id NOT IN (SELECT * FROM (SELECT order_id 
+FROM user_actions
+WHERE action = 'cancel_order') subq2)) ua INNER JOIN orders o USING(order_id)
+ORDER BY ua.user_id ASC, ua.order_id ASC) aliasu USING(order_id)
+GROUP BY user_id
+ORDER BY user_id ASC
+LIMIT 1000;
 
 
 
