@@ -650,5 +650,56 @@ ORDER BY user_id ASC
 LIMIT 1000;
 
 
+SELECT user_id, order_id, time, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY order_id ASC) AS order_number
+FROM user_actions
+WHERE order_id NOT IN (SELECT order_id FROM user_actions WHERE action = 'cancel_order')
+ORDER BY user_id ASC, order_number ASC
+LIMIT 1000
+
+
+SELECT date, orders_count, SUM(orders_count) OVER(ORDER BY date) AS orders_cum_count
+FROM (SELECT COUNT(order_id) AS orders_count, DATE_TRUNC('day', creation_time) AS date 
+FROM (SELECT * FROM orders WHERE order_id NOT IN (SELECT order_id FROM user_actions WHERE action = 'cancel_order')) ali
+GROUP BY date)alia
+
+
+SELECT product_id, name, price, MAX(price) OVER (ORDER BY price DESC) AS max_price,
+ MIN(price) OVER (ORDER BY price DESC) AS min_price
+FROM products
+ORDER BY price DESC, product_id ASC;
+
+
+SELECT product_id, name, price, MAX(price) OVER () AS max_price, ROUND(price/(SELECT MAX(price) FROM products), 2) AS share_of_max
+FROM products
+ORDER BY price DESC, product_id ASC;
+
+
+SELECT product_id, name, price, ROW_NUMBER() OVER(ORDER BY price DESC) AS product_number, RANK() OVER(ORDER BY price DESC) AS product_rank,
+DENSE_RANK() OVER(ORDER BY price DESC) AS product_dense_rank
+FROM products
+
+
+
+SELECT *, LAG(time, 1) OVER (PARTITION BY user_id) AS time_lag, AGE(time, LAG(time, 1) OVER (PARTITION BY user_id)) AS time_diff
+FROM (SELECT user_id, order_id, time, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY order_id ASC) AS order_number
+FROM user_actions
+WHERE order_id NOT IN (SELECT order_id FROM user_actions WHERE action = 'cancel_order')
+ORDER BY user_id ASC, order_number ASC
+LIMIT 1000)ali
+ORDER BY user_id ASC, order_id ASC;
+
+---
+WITH subq AS (SELECT user_id, time_diff, (SUM(time_diff) OVER (PARTITION BY user_id))/COUNT(user_id) OVER (PARTITION BY user_id) AS avg_lag FROM
+(SELECT *, LAG(time, 1) OVER (PARTITION BY user_id) AS time_lag, AGE(time, LAG(time, 1) OVER (PARTITION BY user_id)) AS time_diff
+FROM (SELECT user_id, order_id, time, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY order_id ASC) AS order_number
+FROM user_actions
+WHERE order_id NOT IN (SELECT order_id FROM user_actions WHERE action = 'cancel_order') AND order_id NOT IN (SELECT user_id 
+FROM user_actions
+GROUP BY user_id
+HAVING COUNT(order_id) = 1)
+ORDER BY user_id ASC, order_number ASC)ali)alia)
+
+SELECT EXTRACT(second FROM avg_lag) AS avg_lag_sec FROM
+subq;
 
 
