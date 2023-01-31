@@ -702,4 +702,22 @@ ORDER BY user_id ASC, order_number ASC)ali)alia)
 SELECT EXTRACT(second FROM avg_lag) AS avg_lag_sec FROM
 subq;
 
+----------------
+
+SELECT COALESCE(sex, 'unknown') AS sex, ROUND(AVG(cancel_rate), 3) AS avg_cancel_rate
+FROM users u RIGHT JOIN (SELECT user_id,
+       round(count(distinct order_id) filter (WHERE action = 'cancel_order')::decimal / count(distinct order_id),
+             2) as cancel_rate
+FROM   user_actions
+GROUP BY user_id
+ORDER BY user_id) subq USING(user_id)
+GROUP BY sex
+ORDER BY sex;
+
+------
+
+SELECT order_id, creation_time, time, time-creation_time
+FROM orders INNER JOIN (SELECT order_id, time FROM courier_actions WHERE action = 'deliver_order')sq USING(order_id)
+ORDER BY time-creation_time DESC
+LIMIT 10;
 
