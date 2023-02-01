@@ -721,3 +721,35 @@ FROM orders INNER JOIN (SELECT order_id, time FROM courier_actions WHERE action 
 ORDER BY time-creation_time DESC
 LIMIT 10;
 
+-------------------
+
+WITH CTE_1 AS (SELECT order_id, unnest(product_ids) AS unprod 
+FROM orders)
+
+SELECT order_id, array_agg(name) AS product_names
+FROM (SELECT product_id, name FROM products)sq INNER JOIN CTE_1 ON product_id = unprod
+GROUP BY order_id
+LIMIT 1000;
+
+-----------
+
+WITH CTE_1 AS (SELECT order_id, unnest(product_ids) AS unprod 
+FROM orders),
+CTE_2 AS (SELECT DISTINCT(order_id) AS order_id, courier_id FROM courier_actions),
+CTE_3 AS (SELECT birth_date, user_id FROM users),
+CTE_4 AS (SELECT birth_date, courier_id FROM couriers)
+
+SELECT order_id, user_id,FLOOR((time::DATE-u.birth_date)/365.0) AS user_age, courier_id,
+FLOOR((time::DATE-c.birth_date)/365) AS courier_age
+FROM (SELECT order_id, COUNT(name) AS ord_am
+FROM (SELECT product_id, name FROM products)sq INNER JOIN CTE_1 ON product_id = unprod
+GROUP BY order_id
+ORDER BY ord_am DESC
+LIMIT 5)sq_1 INNER JOIN user_actions ua USING(order_id)
+INNER JOIN CTE_2 USING(order_id)
+INNER JOIN CTE_3 u USING(user_id)
+INNER JOIN CTE_4 c USING(courier_id)
+ORDER BY order_id ASC;
+
+-----------------
+
