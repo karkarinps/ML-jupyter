@@ -774,3 +774,17 @@ FROM orders WHERE order_id NOT IN (SELECT order_id FROM user_actions WHERE actio
 
 
 ---------------------
+
+SELECT courier_id, count_del AS delivered_orders, ROUND(AVG(count_del) OVER(), 2) AS avg_delivered_orders,
+CASE 
+WHEN count_del > AVG(count_del) OVER() THEN 1
+ELSE 0
+END AS is_above_avg
+FROM
+(SELECT courier_id, COUNT(order_id) AS count_del
+FROM courier_actions
+WHERE action = 'deliver_order' AND EXTRACT(month FROM time) = 9
+GROUP BY courier_id)s
+ORDER BY courier_id ASC;
+
+----------------
