@@ -766,3 +766,11 @@ ORDER BY user_id
 LIMIT 1000;
 
 ---------------------
+
+SELECT date, orders_count, ROUND(AVG(orders_count) OVER (ORDER BY date ASC ROWS BETWEEN 3 PRECEDING AND 1 PRECEDING), 2) AS moving_avg
+FROM (SELECT date, orders_count, SUM(orders_count) OVER (ORDER BY date) AS orders_cum_count 
+FROM ( SELECT DATE(creation_time) AS date, COUNT(order_id) AS orders_count 
+FROM orders WHERE order_id NOT IN (SELECT order_id FROM user_actions WHERE action='cancel_order') GROUP BY date ) t) q
+
+
+---------------------
