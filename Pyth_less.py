@@ -1,4 +1,14 @@
 
+-----------------------------------------------------------------
+from functools import reduce
+with open('logfile.txt', 'r', encoding='utf-8') as f_1, open('output.txt', 'w', encoding='utf-8') as out_1:
+    a=[i.strip().split(', ') for i in f_1.readlines()]
+    b=[[j.split(':') for j in i if ':' in j] for i in a]
+    c=[[reduce(lambda x, y: int(x)*60+int(y), j) for j in i] for i in b]
+    d=[reduce(lambda x, y: x-y, i) for i in c]
+    print(*{a[i][0]: d[i] for i in range(len(a)) if abs(d[i])>=60}, sep='\n', file=out_1)
+
+-----------------------------------------------------------
 
 """ abcdefghijklmnopqrstuvwxyz
 абвгдежзийклмнопрстуфхцчшщъыьэюяабвгдежзийклмнопрстуфхцчшщъыьэюя """
