@@ -788,3 +788,22 @@ GROUP BY courier_id)s
 ORDER BY courier_id ASC;
 
 ----------------
+
+SELECT *, ROUND(AVG(price) OVER (), 2) AS avg_price, 
+ROUND(AVG(price) FILTER (WHERE price < (SELECT MAX(price) FROM products)) 
+OVER (), 2) AS avg_price_filtered
+FROM products
+ORDER BY price DESC, product_id ASC;
+
+------------------------
+
+WITH CTE AS (SELECT *, COUNT(order_id) FILTER (WHERE action = 'create_order') 
+OVER (PARTITION BY user_id ORDER BY time) AS created_orders,
+COUNT(order_id) FILTER (WHERE action = 'cancel_order') 
+OVER (PARTITION BY user_id ORDER BY time) AS canceled_orders
+FROM user_actions
+ORDER BY user_id ASC, order_id ASC, action ASC, time ASC
+LIMIT 1000)
+
+SELECT *, ROUND(canceled_orders*1.00/created_orders*1.00, 2) AS cancel_rate
+FROM CTE;
