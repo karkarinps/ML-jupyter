@@ -833,3 +833,20 @@ FROM CTE
 WHERE days_employed>=10;
 
 ---------------------------
+
+WITH CTE AS (SELECT DISTINCT order_id, month_ord, date_ord, creation_time, order_price, daily_revenue, 
+ROUND(order_price*100/daily_revenue, 3) AS percentage_of_daily_revenue
+FROM (SELECT *, SUM(price) OVER (PARTITION BY order_id) AS order_price,
+SUM(price) OVER (PARTITION BY DATE_PART('day', creation_time)) AS daily_revenue,
+DATE_PART('day', creation_time) AS date_ord,
+DATE_PART('month', creation_time) AS month_ord
+FROM (SELECT price, product_id FROM products)s INNER JOIN 
+(SELECT order_id, creation_time, unnest(product_ids) AS product_id
+FROM orders WHERE order_id NOT IN (SELECT order_id FROM user_actions WHERE action = 'cancel_order'))q USING(product_id))sq
+ORDER BY month_ord DESC, date_ord DESC, month_ord DESC, date_ord DESC, percentage_of_daily_revenue DESC, order_id ASC)
+
+SELECT order_id, creation_time, order_price, daily_revenue, percentage_of_daily_revenue
+FROM CTE
+
+-----------------------------
+
