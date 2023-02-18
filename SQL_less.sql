@@ -807,3 +807,29 @@ LIMIT 1000)
 
 SELECT *, ROUND(canceled_orders*1.00/created_orders*1.00, 2) AS cancel_rate
 FROM CTE;
+
+-----------------------------
+
+WITH CTE AS (SELECT courier_id, COUNT(DISTINCT order_id) FILTER (WHERE action = 'deliver_order') AS orders_count
+FROM courier_actions
+GROUP BY courier_id
+ORDER BY orders_count DESC, courier_id ASC
+LIMIT (SELECT COUNT(DISTINCT courier_id) FROM courier_actions)*0.1)
+
+
+SELECT courier_id, orders_count, ROW_NUMBER() OVER(ORDER BY orders_count DESC) AS courier_rank
+FROM CTE;
+
+---------------------------
+
+WITH CTE AS(SELECT DISTINCT courier_id, EXTRACT(day FROM 
+(SELECT MAX(time) FROM courier_actions) - (MIN(time) OVER(PARTITION BY courier_id))) AS days_employed,
+COUNT(order_id) FILTER (WHERE action = 'deliver_order') OVER(PARTITION BY courier_id) AS delivered_orders
+FROM courier_actions
+ORDER BY days_employed DESC, courier_id ASC)
+
+SELECT courier_id, days_employed, delivered_orders
+FROM CTE
+WHERE days_employed>=10;
+
+---------------------------
