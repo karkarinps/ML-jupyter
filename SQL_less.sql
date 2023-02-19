@@ -850,3 +850,22 @@ FROM CTE
 
 -----------------------------
 
+WITH CTE AS (SELECT creation_time::DATE as date,
+                            sum(price) as daily_revenue
+                     FROM   (SELECT price,
+                                    product_id
+                             FROM   products)s
+                         INNER JOIN (SELECT order_id,
+                                            creation_time,
+                                            unnest(product_ids) as product_id
+                                     FROM   orders
+                                     WHERE  order_id not in (SELECT order_id
+                                                             FROM   user_actions
+                                                             WHERE  action = 'cancel_order'))q using(product_id)
+             GROUP BY date
+             ORDER BY date asc)
+             
+SELECT date, daily_revenue, 
+COALESCE(daily_revenue - LAG(daily_revenue, 1) OVER (), 0) AS revenue_growth_abs,
+ROUND(COALESCE((daily_revenue - LAG(daily_revenue, 1) OVER ())*100/LAG(daily_revenue, 1) OVER (), 0), 1) AS revenue_growth_percentage
+FROM CTE
