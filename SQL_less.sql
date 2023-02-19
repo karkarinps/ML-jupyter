@@ -868,4 +868,6 @@ WITH CTE AS (SELECT creation_time::DATE as date,
 SELECT date, daily_revenue, 
 COALESCE(daily_revenue - LAG(daily_revenue, 1) OVER (), 0) AS revenue_growth_abs,
 ROUND(COALESCE((daily_revenue - LAG(daily_revenue, 1) OVER ())*100/LAG(daily_revenue, 1) OVER (), 0), 1) AS revenue_growth_percentage
-FROM CTE
+FROM CTE;
+
+------------------------------------------
