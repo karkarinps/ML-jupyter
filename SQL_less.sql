@@ -871,3 +871,30 @@ ROUND(COALESCE((daily_revenue - LAG(daily_revenue, 1) OVER ())*100/LAG(daily_rev
 FROM CTE;
 
 ------------------------------------------
+/* Рассчитайте медианную стоимость всех заказов из таблицы orders, оформленных в сервисе. 
+В качестве результата выведите одно число. 
+Колонку с ним назовите median_price. Отменённые заказы не учитывайте.
+Запрос должен учитывать два возможных сценария: для чётного и нечётного числа заказов.*/
+
+WITH CTE AS (SELECT ord_price, ROW_NUMBER() OVER() AS ord_num
+                FROM (SELECT DISTINCT order_id, SUM(price) OVER(PARTITION BY order_id) AS ord_price
+                    FROM   (SELECT price,
+                            product_id
+                     FROM   products)s
+                 INNER JOIN (SELECT order_id,
+                                    creation_time,
+                                    unnest(product_ids) as product_id
+                             FROM   orders
+                             WHERE  order_id not in (SELECT order_id
+                                                     FROM   user_actions
+                                                     WHERE  action = 'cancel_order'))q using(product_id)
+        ORDER BY ord_price ASC)que)
+        
+ 
+SELECT CASE (SELECT MAX(ord_num) FROM CTE)%2 WHEN 0 THEN 
+(SUM(ord_price) FILTER (WHERE ord_num IN ((SELECT MAX(ord_num) FROM CTE)/2, ((SELECT MAX(ord_num) FROM CTE)/2) + 1)))/2
+ELSE 
+SUM(ord_price) FILTER (WHERE ord_num = ((SELECT MAX(ord_num) FROM CTE)/2) + 1) 
+END
+AS median_price
+FROM CTE
