@@ -898,3 +898,26 @@ SUM(ord_price) FILTER (WHERE ord_num = ((SELECT MAX(ord_num) FROM CTE)/2) + 1)
 END
 AS median_price
 FROM CTE
+
+--------------------------------
+
+/* Посчитать накопительную сумму числа новых юзеров/курьеров по дням и величину их ежедневной прибавки.*/
+
+with cte as (SELECT *
+             FROM   (SELECT DISTINCT first_date,
+                                     count(user_id) OVER(PARTITION BY first_date) as new_users
+                     FROM   (SELECT DISTINCT user_id,
+                                             (min(time) OVER(PARTITION BY user_id))::date as first_date
+                             FROM   user_actions)q)qw
+                 INNER JOIN (SELECT DISTINCT first_date,
+                                             count(courier_id) OVER(PARTITION BY first_date) as new_couriers
+                             FROM   (SELECT DISTINCT courier_id,
+                                                     (min(time) OVER(PARTITION BY courier_id))::date as first_date
+                                     FROM   courier_actions)s)qe using(first_date)
+             ORDER BY first_date asc)
+SELECT first_date as date,
+       new_users,
+       new_couriers,
+       (sum(new_users) OVER(ORDER BY first_date))::int as total_users,
+       (sum(new_couriers) OVER(ORDER BY first_date))::int as total_couriers
+FROM   cte
