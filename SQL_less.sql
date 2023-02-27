@@ -922,7 +922,7 @@ SELECT first_date as date,
        new_couriers,
        (sum(new_users) OVER(ORDER BY first_date))::int as total_users,
        (sum(new_couriers) OVER(ORDER BY first_date))::int as total_couriers
-FROM   cte
+FROM   cte;
 
 -------------------------------
 /* Посчитать накопительную сумму числа новых юзеров/курьеров по дням и величину их ежедневной прибавки
@@ -949,4 +949,46 @@ SELECT *, ROUND((new_users*100)::numeric/(LAG(new_users, 1) OVER())-100, 2) AS n
 ROUND((new_couriers*100)::numeric/(LAG(new_couriers, 1) OVER())-100, 2) AS new_couriers_change,
 ROUND((total_users*100)::numeric/(LAG(total_users, 1) OVER())-100, 2) AS total_users_growth,
 ROUND((total_couriers*100)::numeric/(LAG(total_couriers, 1) OVER())-100, 2) AS total_couriers_growth
-FROM CTE
+FROM CTE;
+
+--------------------------------------------------
+
+/* Число активных пользователей/курьеров по дням и их доля в общем числе пользователей/курьеров по дням*/
+
+with cte as (SELECT date,
+                    paying_users,
+                    active_couriers,
+                    new_users,
+                    new_couriers
+             FROM   (SELECT time::date as date,
+                            count(distinct user_id) as paying_users
+                     FROM   user_actions
+                     WHERE  order_id not in (SELECT order_id
+                                             FROM   user_actions
+                                             WHERE  action = 'cancel_order')
+                     GROUP BY date)q
+                 INNER JOIN (SELECT time::date as date,
+                                    count(distinct courier_id) as active_couriers
+                             FROM   courier_actions
+                             WHERE  order_id not in (SELECT order_id
+                                                     FROM   user_actions
+                                                     WHERE  action = 'cancel_order')
+                             GROUP BY date)e using(date)
+                 INNER JOIN (SELECT DISTINCT first_date as date,
+                                             count(user_id) OVER(PARTITION BY first_date) as new_users
+                             FROM   (SELECT DISTINCT user_id,
+                                                     (min(time) OVER(PARTITION BY user_id))::date as first_date
+                                     FROM   user_actions)q)q1 using(date)
+                 INNER JOIN (SELECT DISTINCT first_date as date,
+                                             count(courier_id) OVER(PARTITION BY first_date) as new_couriers
+                             FROM   (SELECT DISTINCT courier_id,
+                                                     (min(time) OVER(PARTITION BY courier_id))::date as first_date
+                                     FROM   courier_actions)s)q2 using(date))
+SELECT date,
+       paying_users,
+       active_couriers,
+       round((paying_users*100)::numeric/(sum(new_users) OVER(ORDER BY date)),
+             2) as paying_users_share,
+       round((active_couriers*100)::numeric/(sum(new_couriers) OVER(ORDER BY date)),
+             2) as active_couriers_share
+FROM   cte;
