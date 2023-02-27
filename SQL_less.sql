@@ -891,13 +891,15 @@ WITH CTE AS (SELECT ord_price, ROW_NUMBER() OVER() AS ord_num
         ORDER BY ord_price ASC)que)
         
  
-SELECT CASE (SELECT MAX(ord_num) FROM CTE)%2 WHEN 0 THEN 
-(SUM(ord_price) FILTER (WHERE ord_num IN ((SELECT MAX(ord_num) FROM CTE)/2, ((SELECT MAX(ord_num) FROM CTE)/2) + 1)))/2
+SELECT CASE (SELECT MAX(ord_num) 
+    FROM CTE)%2 WHEN 0 THEN 
+    (SUM(ord_price) FILTER (WHERE ord_num IN ((SELECT MAX(ord_num) 
+        FROM CTE)/2, ((SELECT MAX(ord_num) FROM CTE)/2) + 1)))/2
 ELSE 
 SUM(ord_price) FILTER (WHERE ord_num = ((SELECT MAX(ord_num) FROM CTE)/2) + 1) 
 END
 AS median_price
-FROM CTE
+FROM CTE;
 
 --------------------------------
 
@@ -921,3 +923,30 @@ SELECT first_date as date,
        (sum(new_users) OVER(ORDER BY first_date))::int as total_users,
        (sum(new_couriers) OVER(ORDER BY first_date))::int as total_couriers
 FROM   cte
+
+-------------------------------
+/* Посчитать накопительную сумму числа новых юзеров/курьеров по дням и величину их ежедневной прибавки
+в % относительно предыдущего дня.*/
+
+WITH CTE AS (SELECT first_date as date,
+       new_users,
+       new_couriers,
+       (sum(new_users) OVER(ORDER BY first_date))::int as total_users,
+       (sum(new_couriers) OVER(ORDER BY first_date))::int as total_couriers
+FROM   (SELECT *
+             FROM   (SELECT DISTINCT first_date,
+                                     count(user_id) OVER(PARTITION BY first_date) as new_users
+                     FROM   (SELECT DISTINCT user_id,
+                                             (min(time) OVER(PARTITION BY user_id))::date as first_date
+                             FROM   user_actions)q)qw
+                 INNER JOIN (SELECT DISTINCT first_date,
+                                             count(courier_id) OVER(PARTITION BY first_date) as new_couriers
+                             FROM   (SELECT DISTINCT courier_id,
+                                                     (min(time) OVER(PARTITION BY courier_id))::date as first_date
+                                     FROM   courier_actions)s)qe using(first_date)
+             ORDER BY first_date asc)qwe)
+SELECT *, ROUND((new_users*100)::numeric/(LAG(new_users, 1) OVER())-100, 2) AS new_users_change,
+ROUND((new_couriers*100)::numeric/(LAG(new_couriers, 1) OVER())-100, 2) AS new_couriers_change,
+ROUND((total_users*100)::numeric/(LAG(total_users, 1) OVER())-100, 2) AS total_users_growth,
+ROUND((total_couriers*100)::numeric/(LAG(total_couriers, 1) OVER())-100, 2) AS total_couriers_growth
+FROM CTE
