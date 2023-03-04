@@ -992,3 +992,48 @@ SELECT date,
        round((active_couriers*100)::numeric/(sum(new_couriers) OVER(ORDER BY date)),
              2) as active_couriers_share
 FROM   cte;
+
+----------------------------------
+
+WITH CTE AS (SELECT 
+       array_agg(name) as product_names
+FROM   (SELECT order_id,
+               unnest(product_ids) as product_id
+        FROM   orders) t join products using(product_id)
+GROUP BY order_id limit 1000)
+
+SELECT COUNT(arra) FROM (SELECT * FROM CTE)q INNER JOIN (SELECT array[name_1, name_2] AS arra FROM 
+(SELECT name AS name_1 FROM products)q INNER JOIN (SELECT name AS name_2 FROM products)s
+ON q.name_1 < s.name_2)e ON ARRAY[q.product_names] @> ARRAY[e.arra]
+GROUP BY arra
+
+----------------------------------------
+/* Для каждого дня расчитать долю пользователей в общем числе платящих пользователей, сделавших в этот день 1 заказ и
+долю сделавших более 1 заказа*/
+
+with cte as (SELECT date,
+                    paying_users
+             FROM   (SELECT time::date as date,
+                            count(distinct user_id) as paying_users
+                     FROM   user_actions
+                     WHERE  order_id not in (SELECT order_id
+                                             FROM   user_actions
+                                             WHERE  action = 'cancel_order')
+                     GROUP BY date)q), cte_0 as (SELECT time::date as date,
+                                   user_id,
+                                   count(user_id)
+                            FROM   user_actions
+                            WHERE  order_id not in (SELECT order_id
+                                                    FROM   user_actions
+                                                    WHERE  action = 'cancel_order')
+                            GROUP BY date, user_id
+                            ORDER BY date asc)
+SELECT DISTINCT date,
+                round(count(user_id) filter (WHERE count = 1) OVER(PARTITION BY date)*100/paying_users::numeric,
+                      2) as single_order_users_share,
+                round(count(user_id) filter (WHERE count > 1) OVER(PARTITION BY date)*100/paying_users::numeric,
+                      2) as several_orders_users_share
+FROM   cte_0
+    INNER JOIN cte using(date);
+
+-------------------------------------
