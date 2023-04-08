@@ -1037,3 +1037,30 @@ FROM   cte_0
     INNER JOIN cte using(date);
 
 -------------------------------------
+
+with cte as (SELECT DISTINCT time::date as date,
+                             count(order_id) filter(WHERE order_id not in (SELECT order_id
+                                                           FROM   user_actions
+                                                           WHERE  action = 'cancel_order'))
+             OVER (
+             PARTITION BY time::date) as ord_am
+             FROM   user_actions), cte_1 as (SELECT time::date as date,
+                                       count(distinct courier_id) as act_cou
+                                FROM   courier_actions
+                                WHERE  order_id in (SELECT order_id
+                                                    FROM   courier_actions
+                                                    WHERE  action = 'deliver_order')
+                                GROUP BY date)
+SELECT date,
+       round(act_us::decimal/act_cou, 2) as users_per_courier,
+       round(ord_am::decimal/act_cou, 2) as orders_per_courier
+FROM   (SELECT time::date as date,
+               count(distinct user_id) as act_us
+        FROM   user_actions
+        WHERE  order_id not in (SELECT order_id
+                                FROM   user_actions
+                                WHERE  action = 'cancel_order')
+        GROUP BY date)q
+    INNER JOIN cte using(date)
+    INNER JOIN cte_1 using(date)
+ORDER BY date asc;
