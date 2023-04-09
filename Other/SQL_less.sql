@@ -1084,3 +1084,21 @@ FROM   cte_1
 ORDER BY time asc;
 
 ----------------------------------------------
+
+with cte as (SELECT DISTINCT date_part('hour', creation_time) as hour,
+                             count(order_id) filter (WHERE order_id in (SELECT order_id
+                                                        FROM   courier_actions
+                                                        WHERE  action = 'deliver_order'))
+             OVER (
+             PARTITION BY date_part('hour', creation_time)) as successful_orders, count(order_id)
+             OVER (
+             PARTITION BY date_part('hour', creation_time)) as all_ord
+             FROM   orders
+             ORDER BY hour asc)
+SELECT hour::int,
+       successful_orders,
+       all_ord-successful_orders as canceled_orders,
+       round((all_ord-successful_orders)::decimal/all_ord, 3) as cancel_rate
+FROM   cte;
+
+-------------------------------------------------
