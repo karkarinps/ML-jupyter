@@ -1064,3 +1064,23 @@ FROM   (SELECT time::date as date,
     INNER JOIN cte using(date)
     INNER JOIN cte_1 using(date)
 ORDER BY date asc;
+
+---------------------------------------------
+
+with cte as (SELECT order_id,
+                    time,
+                    (max(time) OVER (PARTITION BY order_id)) - (min(time) OVER (PARTITION BY order_id)) as del_time
+             FROM   courier_actions
+             WHERE  order_id in (SELECT order_id
+                                 FROM   courier_actions
+                                 WHERE  action = 'deliver_order')), cte_1 as (SELECT DISTINCT order_id,
+                                                             time::date,
+                                                             extract(minute
+                                             FROM   del_time)
+                                             FROM   cte)
+SELECT DISTINCT time as date,
+                ceiling((sum(date_part) OVER (PARTITION BY time))/ (count(date_part) OVER (PARTITION BY time)))::int as minutes_to_deliver
+FROM   cte_1
+ORDER BY time asc;
+
+----------------------------------------------
