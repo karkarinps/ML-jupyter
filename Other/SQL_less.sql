@@ -1102,3 +1102,24 @@ SELECT hour::int,
 FROM   cte;
 
 -------------------------------------------------
+
+with cte as (SELECT DISTINCT date,
+                             (sum(price) OVER(PARTITION BY date)) as revenue
+             FROM   (SELECT unnest(product_ids) as product_id,
+                            order_id,
+                            creation_time::date as date
+                     FROM   orders
+                     WHERE  order_id not in (SELECT order_id
+                                             FROM   user_actions
+                                             WHERE  action = 'cancel_order'))q
+                 INNER JOIN (SELECT product_id,
+                                    price
+                             FROM   products)s using(product_id)
+             ORDER BY date)
+SELECT *,
+       sum(revenue) OVER(ORDER BY date asc) as total_revenue,
+       round((revenue - lag(revenue, 1) OVER(ORDER BY date))*100::decimal/lag(revenue, 1) OVER(ORDER BY date),
+             2) as revenue_change
+FROM   cte
+
+-----------------------------------------------------
