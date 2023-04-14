@@ -1123,3 +1123,36 @@ SELECT *,
 FROM   cte
 
 -----------------------------------------------------
+
+with cte as (SELECT DISTINCT date,
+                             (sum(price) OVER(PARTITION BY date)) as revenue
+             FROM   (SELECT unnest(product_ids) as product_id,
+                            order_id,
+                            creation_time::date as date
+                     FROM   orders
+                     WHERE  order_id not in (SELECT order_id
+                                             FROM   user_actions
+                                             WHERE  action = 'cancel_order'))q
+                 INNER JOIN (SELECT product_id,
+                                    price
+                             FROM   products)s using(product_id)
+             ORDER BY date), cte_1 as (SELECT time::date as date,
+                                 count(distinct user_id) as all_us,
+                                 count(distinct user_id) filter (WHERE order_id not in (SELECT order_id
+                                                                                 FROM   user_actions
+                                                                                 WHERE  action = 'cancel_order')) as pay_us, count (order_id) filter (
+                          WHERE  order_id not in (SELECT order_id
+                                                  FROM   user_actions
+                                                  WHERE  action = 'cancel_order')) as all_ord
+                          FROM   user_actions
+                          GROUP BY date
+                          ORDER BY date)
+SELECT date,
+       round(revenue::decimal/all_us, 2) as arpu,
+       round(revenue::decimal/pay_us, 2) as arppu,
+       round(revenue::decimal/all_ord, 2) as aov
+FROM   cte
+    INNER JOIN cte_1 using(date)
+ORDER BY date asc;
+
+---------------------------------------------------------
