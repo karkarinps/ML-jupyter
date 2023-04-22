@@ -1156,3 +1156,133 @@ FROM   cte
 ORDER BY date asc;
 
 ---------------------------------------------------------
+
+-- Create table
+CREATE TABLE TABLE_TRANSACT$(
+  BUSINESS_DT date NOT NULL,
+  ACCOUNT_DEBIT_ID VARCHAR2(50) NOT NULL,
+  ACCOUNT_CREDIT_ID VARCHAR2(50) NOT NULL,
+  POSTING_AMT number(10) NOT NULL
+);
+-- Insert values into table
+INSERT INTO
+  TABLE_TRANSACT$ (
+    BUSINESS_DT,
+    ACCOUNT_DEBIT_ID,
+    POSTING_AMT,
+    ACCOUNT_CREDIT_ID
+  )
+select
+  date '2020-01-01' as BUSINESS_DT,
+  1 as ACCOUNT_DEBIT_ID,
+  1000 as POSTING_AMT,
+  2 as ACCOUNT_CREDIT_ID
+from
+  dual
+union all
+select
+  date '2020-01-05' as BUSINESS_DT,
+  2 as ACCOUNT_DEBIT_ID,
+  500 as POSTING_AMT,
+  1 as ACCOUNT_CREDIT_ID
+from
+  dual
+union all
+select
+  date '2020-02-04' as BUSINESS_DT,
+  2 as ACCOUNT_DEBIT_ID,
+  500 as POSTING_AMT,
+  1 as ACCOUNT_CREDIT_ID
+from
+  dual
+union all
+select
+  date '2020-03-04' as BUSINESS_DT,
+  1 as ACCOUNT_DEBIT_ID,
+  1000 as POSTING_AMT,
+  2 as ACCOUNT_CREDIT_ID
+from
+  dual;
+  
+  
+-- 1 Task: Account Balance on current date
+-- group credit and debit operations for each account on current date
+  WITH CTE AS (
+    SELECT
+      account_debit_id AS Account_ID,
+      SUM(POSTING_AMT) AS debit
+    FROM
+      TABLE_TRANSACT$
+    GROUP BY
+      account_debit_id
+  ),
+  CTE_1 AS (
+    SELECT
+      account_credit_id AS Account_ID,
+      SUM(POSTING_AMT) AS credit
+    FROM
+      TABLE_TRANSACT$
+    GROUP BY
+      account_credit_id
+  ) 
+-- subtract debit from credit to count total balance
+SELECT
+  Account_ID,
+  CURRENT_DATE AS Current_Date,
+  credit - debit AS Account_Balance
+FROM
+  CTE
+  INNER JOIN CTE_1 USING(Account_ID)
+ORDER BY
+  Account_ID;
+  
+  
+-- 2-nd Task: Account balance for each date with transaction
+-- union tables with each transaction for each account
+  WITH CTE AS (
+    SELECT
+      *
+    FROM
+      (
+        SELECT
+          BUSINESS_DT,
+          account_debit_id AS Account_ID,
+          - POSTING_AMT AS Trans
+        FROM
+          TABLE_TRANSACT$
+      )
+    UNION
+      (
+        SELECT
+          BUSINESS_DT,
+          account_credit_id AS Account_ID,
+          POSTING_AMT AS Trans
+        FROM
+          TABLE_TRANSACT$
+      )
+  ) 
+
+-- creating column with next trensact date minus 1 for current AccID and count progressive sum
+SELECT
+  Account_ID,
+  BUSINESS_DT AS Business_From_DT,
+  COALESCE(
+    (
+      LEAD(BUSINESS_DT, 1) OVER (
+        PARTITION BY Account_ID
+        ORDER BY
+          BUSINESS_DT ASC
+      )
+    ) - 1,
+    TO_DATE('31/12/9999')
+  ) AS Business_To_DT,
+  SUM(Trans) OVER (
+    PARTITION BY Account_ID
+    ORDER BY
+      BUSINESS_DT ASC ROWS BETWEEN UNBOUNDED PRECEDING
+      AND CURRENT ROW
+  ) AS Account_Balance
+FROM
+  CTE;
+
+  ------------------------------------------------------------
