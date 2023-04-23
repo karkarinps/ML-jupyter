@@ -1,3 +1,223 @@
+-- Create table
+CREATE TABLE TABLE_TRANSACT$(
+  BUSINESS_DT date NOT NULL,
+  ACCOUNT_DEBIT_ID VARCHAR2(50) NOT NULL,
+  ACCOUNT_CREDIT_ID VARCHAR2(50) NOT NULL,
+  POSTING_AMT number(10) NOT NULL
+);
+-- Insert values into table
+INSERT INTO
+  TABLE_TRANSACT$ (
+    BUSINESS_DT,
+    ACCOUNT_DEBIT_ID,
+    POSTING_AMT,
+    ACCOUNT_CREDIT_ID
+  )
+select
+  date '2020-01-01' as BUSINESS_DT,
+  1 as ACCOUNT_DEBIT_ID,
+  1000 as POSTING_AMT,
+  2 as ACCOUNT_CREDIT_ID
+from
+  dual
+union all
+select
+  date '2020-01-05' as BUSINESS_DT,
+  2 as ACCOUNT_DEBIT_ID,
+  500 as POSTING_AMT,
+  1 as ACCOUNT_CREDIT_ID
+from
+  dual
+union all
+select
+  date '2020-02-04' as BUSINESS_DT,
+  2 as ACCOUNT_DEBIT_ID,
+  500 as POSTING_AMT,
+  1 as ACCOUNT_CREDIT_ID
+from
+  dual
+union all
+select
+  date '2020-03-04' as BUSINESS_DT,
+  1 as ACCOUNT_DEBIT_ID,
+  1000 as POSTING_AMT,
+  2 as ACCOUNT_CREDIT_ID
+from
+  dual;
+  
+  
+-- 1 Task: Account Balance on current date
+-- group credit and debit operations for each account on current date
+  WITH CTE AS (
+    SELECT
+      account_debit_id AS Account_ID,
+      SUM(POSTING_AMT) AS debit
+    FROM
+      TABLE_TRANSACT$
+    GROUP BY
+      account_debit_id
+  ),
+  CTE_1 AS (
+    SELECT
+      account_credit_id AS Account_ID,
+      SUM(POSTING_AMT) AS credit
+    FROM
+      TABLE_TRANSACT$
+    GROUP BY
+      account_credit_id
+  ) 
+-- subtract debit from credit to count total balance
+SELECT
+  Account_ID,
+  CURRENT_DATE AS Current_Date,
+  credit - debit AS Account_Balance
+FROM
+  CTE
+  INNER JOIN CTE_1 USING(Account_ID)
+ORDER BY
+  Account_ID;
+  
+  
+-- 2-nd Task: Account balance for each date with transaction
+-- union tables with each transaction for each account
+  WITH CTE AS (
+    SELECT
+      *
+    FROM
+      (
+        SELECT
+          BUSINESS_DT,
+          account_debit_id AS Account_ID,
+          - POSTING_AMT AS Trans
+        FROM
+          TABLE_TRANSACT$
+      )
+    UNION
+      (
+        SELECT
+          BUSINESS_DT,
+          account_credit_id AS Account_ID,
+          POSTING_AMT AS Trans
+        FROM
+          TABLE_TRANSACT$
+      )
+  ) 
+
+-- creating column with next trensact date minus 1 for current AccID and count progressive sum
+SELECT
+  Account_ID,
+  BUSINESS_DT AS Business_From_DT,
+  COALESCE(
+    (
+      LEAD(BUSINESS_DT, 1) OVER (
+        PARTITION BY Account_ID
+        ORDER BY
+          BUSINESS_DT ASC
+      )
+    ) - 1,
+    TO_DATE('31/12/9999')
+  ) AS Business_To_DT,
+  SUM(Trans) OVER (
+    PARTITION BY Account_ID
+    ORDER BY
+      BUSINESS_DT ASC ROWS BETWEEN UNBOUNDED PRECEDING
+      AND CURRENT ROW
+  ) AS Account_Balance
+FROM
+  CTE;
+
+
+-- 3-rd Task: account balance on each date with or without transactions
+-- same union as in previous Task_2  
+WITH CTE AS (
+  SELECT
+    *
+  FROM
+    (
+      SELECT
+        BUSINESS_DT,
+        account_debit_id AS Account_ID,
+        - POSTING_AMT AS Trans
+      FROM
+        TABLE_TRANSACT$
+    )
+  UNION
+    (
+      SELECT
+        BUSINESS_DT,
+        account_credit_id AS Account_ID,
+        POSTING_AMT AS Trans
+      FROM
+        TABLE_TRANSACT$
+    )
+),
+
+-- same as in previous Task_2, but with changed end date from 31/12/9999 to 31/3/2020 - our observe period
+CTE_1 AS (
+  SELECT
+    Account_ID,
+    BUSINESS_DT AS Business_From_DT,
+    COALESCE(
+      (
+        LEAD(BUSINESS_DT, 1) OVER (
+          PARTITION BY Account_ID
+          ORDER BY
+            BUSINESS_DT ASC
+        )
+      ) - 1,
+      TO_DATE('31/3/2020')
+    ) AS Business_To_DT,
+    SUM(Trans) OVER (
+      PARTITION BY Account_ID
+      ORDER BY
+        BUSINESS_DT ASC ROWS BETWEEN UNBOUNDED PRECEDING
+        AND CURRENT ROW
+    ) AS Account_Balance
+  FROM
+    CTE
+),
+
+-- apply recursive with func which union rows with dates on condition less then end date
+CTE_2(
+  Account_ID,
+  Business_From_DT,
+  Business_To_DT,
+  Account_Balance,
+  eachdates
+) AS (
+  select
+    Account_ID,
+    Business_From_DT,
+    Business_To_DT,
+    Account_Balance,
+    Business_From_DT as eachdates
+  from
+    CTE_1
+  union all
+  select
+    Account_ID,
+    Business_From_DT,
+    Business_To_DT,
+    Account_Balance,
+    eachdates + 1
+  from
+    CTE_2
+  where
+    eachdates < Business_To_DT
+) 
+
+-- just select needed columns from last CTE_2 in the right order
+select
+  Account_ID,
+  eachdates as Business_Date,
+  Account_Balance
+from
+  CTE_2
+order by
+  Business_Date ASC,
+  Account_ID ASC;
+
+--------------------------------------------------------------------
 /* вывести название, авторов, жанр, цену и кол-во книг написанных в самом популярном жанр(e)/ах */
 /* 6. Выводим нужные столбцы, объединяя информацию по ключевым столбцам из разных таблиц */
 SELECT title, name_author, name_genre, price, amount
@@ -1156,133 +1376,228 @@ FROM   cte
 ORDER BY date asc;
 
 ---------------------------------------------------------
-
--- Create table
-CREATE TABLE TABLE_TRANSACT$(
-  BUSINESS_DT date NOT NULL,
-  ACCOUNT_DEBIT_ID VARCHAR2(50) NOT NULL,
-  ACCOUNT_CREDIT_ID VARCHAR2(50) NOT NULL,
-  POSTING_AMT number(10) NOT NULL
+-- Creating tables, insert values, etc
+CREATE TABLE pet_chk_20$(
+  card_no VARCHAR2(50) NOT NULL,
+  dt date NOT NULL,
+  cheque_id VARCHAR2(50) NOT NULL,
+  ltr_vol number(10) NOT NULL,
+  vol_ai92 number(10) NOT NULL,
+  vol_ai95 number(10) NOT NULL,
+  vol_ai98 number(10) NOT NULL,
+  vol_gaz number(10) NOT NULL,
+  vol_diesel number(10) NOT NULL,
+  vol_other number(10) NOT NULL
 );
--- Insert values into table
+CREATE TABLE pet_chk_21$(
+  card_no VARCHAR2(50) NOT NULL,
+  dt date NOT NULL,
+  cheque_id VARCHAR2(50) NOT NULL,
+  ltr_vol number(10) NOT NULL,
+  vol_ai92 number(10) NOT NULL,
+  vol_ai95 number(10) NOT NULL,
+  vol_ai98 number(10) NOT NULL,
+  vol_gaz number(10) NOT NULL,
+  vol_diesel number(10) NOT NULL,
+  vol_other number(10) NOT NULL
+);
+CREATE TABLE clients_info$(
+  card_no VARCHAR2(50) NOT NULL,
+  sex_mf VARCHAR2(10) NOT NULL
+);
 INSERT INTO
-  TABLE_TRANSACT$ (
-    BUSINESS_DT,
-    ACCOUNT_DEBIT_ID,
-    POSTING_AMT,
-    ACCOUNT_CREDIT_ID
+  pet_chk_20$
+values
+  (
+    '123',
+    date '2020-01-01',
+    '8763',
+    25,
+    12,
+    13,
+    0,
+    0,
+    0,
+    0
+  );
+INSERT INTO
+  pet_chk_20$
+values
+  (
+    '456',
+    date '2020-01-05',
+    '976',
+    51,
+    21,
+    0,
+    15,
+    0,
+    15,
+    0
+  );
+INSERT INTO
+  pet_chk_20$
+values
+  (
+    '789',
+    date '2020-02-04',
+    '2837',
+    28,
+    0,
+    0,
+    0,
+    8,
+    12,
+    8
+  );
+INSERT INTO
+  pet_chk_20$
+values
+  (
+    '101',
+    date '2020-03-04',
+    '2373',
+    75,
+    0,
+    25,
+    20,
+    15,
+    0,
+    15
+  );
+INSERT INTO
+  pet_chk_21$
+values
+  (
+    '102',
+    date '2021-01-01',
+    '908',
+    87,
+    27,
+    0,
+    20,
+    0,
+    22,
+    18
+  );
+INSERT INTO
+  pet_chk_21$
+values
+  (
+    '456',
+    date '2021-01-05',
+    '87',
+    54,
+    0,
+    10,
+    0,
+    16,
+    18,
+    0
+  );
+INSERT INTO
+  pet_chk_21$
+values
+  (
+    '789',
+    date '2021-02-04',
+    '6443',
+    32,
+    16,
+    0,
+    16,
+    0,
+    0,
+    0
+  );
+INSERT INTO
+  pet_chk_21$
+values
+  (
+    '101',
+    date '2021-03-04',
+    '2639',
+    81,
+    0,
+    21,
+    0,
+    38,
+    0,
+    22
+  );
+INSERT INTO
+  clients_info$
+values
+  ('102', 'male');
+INSERT INTO
+  clients_info$
+values
+  ('456', 'female');
+INSERT INTO
+  clients_info$
+values
+  ('789', 'male');
+INSERT INTO
+  clients_info$
+values
+  ('101', 'female');
+INSERT INTO
+  clients_info$
+values
+  ('123', 'male');
+
+
+-- Task 4.1; Oil type distribution 2020-2021
+  WITH CTE AS (
+    select
+      ltr_vol,
+      vol_ai92,
+      vol_ai95,
+      vol_ai98,
+      vol_gaz,
+      vol_diesel,
+      vol_other
+    from
+      pet_chk_21$
+    UNION
+    select
+      ltr_vol,
+      vol_ai92,
+      vol_ai95,
+      vol_ai98,
+      vol_gaz,
+      vol_diesel,
+      vol_other
+    from
+      pet_chk_20$
   )
 select
-  date '2020-01-01' as BUSINESS_DT,
-  1 as ACCOUNT_DEBIT_ID,
-  1000 as POSTING_AMT,
-  2 as ACCOUNT_CREDIT_ID
+  ROUND(sum(vol_ai92) * 100 / sum(ltr_vol), 2) as share_92,
+  ROUND(sum(vol_ai95) * 100 / sum(ltr_vol), 2) as share_95,
+  ROUND(sum(vol_ai98) * 100 / sum(ltr_vol), 2) as share_98,
+  ROUND(sum(vol_gaz) * 100 / sum(ltr_vol), 2) as share_gaz,
+  ROUND(sum(vol_diesel) * 100 / sum(ltr_vol), 2) as share_diesel,
+  ROUND(sum(vol_other) * 100 / sum(ltr_vol), 2) as share_other
 from
-  dual
-union all
+  cte;
+  
+  
+-- Task 4.2; Define average fuel volume for male/female
 select
-  date '2020-01-05' as BUSINESS_DT,
-  2 as ACCOUNT_DEBIT_ID,
-  500 as POSTING_AMT,
-  1 as ACCOUNT_CREDIT_ID
+  DISTINCT sex_mf as sex,
+  ROUND(avg(ltr_vol) OVER(PARTITION BY sex_mf), 2) as avg_vol
 from
-  dual
-union all
-select
-  date '2020-02-04' as BUSINESS_DT,
-  2 as ACCOUNT_DEBIT_ID,
-  500 as POSTING_AMT,
-  1 as ACCOUNT_CREDIT_ID
-from
-  dual
-union all
-select
-  date '2020-03-04' as BUSINESS_DT,
-  1 as ACCOUNT_DEBIT_ID,
-  1000 as POSTING_AMT,
-  2 as ACCOUNT_CREDIT_ID
-from
-  dual;
-  
-  
--- 1 Task: Account Balance on current date
--- group credit and debit operations for each account on current date
-  WITH CTE AS (
-    SELECT
-      account_debit_id AS Account_ID,
-      SUM(POSTING_AMT) AS debit
-    FROM
-      TABLE_TRANSACT$
-    GROUP BY
-      account_debit_id
-  ),
-  CTE_1 AS (
-    SELECT
-      account_credit_id AS Account_ID,
-      SUM(POSTING_AMT) AS credit
-    FROM
-      TABLE_TRANSACT$
-    GROUP BY
-      account_credit_id
-  ) 
--- subtract debit from credit to count total balance
-SELECT
-  Account_ID,
-  CURRENT_DATE AS Current_Date,
-  credit - debit AS Account_Balance
-FROM
-  CTE
-  INNER JOIN CTE_1 USING(Account_ID)
-ORDER BY
-  Account_ID;
-  
-  
--- 2-nd Task: Account balance for each date with transaction
--- union tables with each transaction for each account
-  WITH CTE AS (
-    SELECT
-      *
-    FROM
-      (
-        SELECT
-          BUSINESS_DT,
-          account_debit_id AS Account_ID,
-          - POSTING_AMT AS Trans
-        FROM
-          TABLE_TRANSACT$
-      )
-    UNION
-      (
-        SELECT
-          BUSINESS_DT,
-          account_credit_id AS Account_ID,
-          POSTING_AMT AS Trans
-        FROM
-          TABLE_TRANSACT$
-      )
-  ) 
-
--- creating column with next trensact date minus 1 for current AccID and count progressive sum
-SELECT
-  Account_ID,
-  BUSINESS_DT AS Business_From_DT,
-  COALESCE(
-    (
-      LEAD(BUSINESS_DT, 1) OVER (
-        PARTITION BY Account_ID
-        ORDER BY
-          BUSINESS_DT ASC
-      )
-    ) - 1,
-    TO_DATE('31/12/9999')
-  ) AS Business_To_DT,
-  SUM(Trans) OVER (
-    PARTITION BY Account_ID
-    ORDER BY
-      BUSINESS_DT ASC ROWS BETWEEN UNBOUNDED PRECEDING
-      AND CURRENT ROW
-  ) AS Account_Balance
-FROM
-  CTE;
+  (
+    select
+      card_no,
+      ltr_vol
+    from
+      pet_chk_21$
+  )
+  INNER JOIN clients_info$ USING(card_no);
 
   ------------------------------------------------------------
+
+
+
+  -------------------------------------------------------------------
