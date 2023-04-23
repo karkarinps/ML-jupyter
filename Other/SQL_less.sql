@@ -1596,6 +1596,64 @@ from
   )
   INNER JOIN clients_info$ USING(card_no);
 
+  -- Task 4.3; check ammount distribution on volume partitions multiple 50 liters in Jan 2021
+-- Filter month from 2021 table
+WITH CTE AS (
+  select
+    cheque_id,
+    dt,
+    ltr_vol
+  from
+    pet_chk_21$
+  WHERE
+    EXTRACT(
+      month
+      FROM
+        dt
+    ) = 1
+),
+-- Use recursive WITH. Where 0 - start fuel volume value we need
+-- 50 - fuel volume interval (our partitions by volumes)
+-- 1000 - stop volume we need to "take into account"
+-- we can change each variable for our needs
+cte_1(vol_start) AS (
+  SELECT
+    0 AS vol_start
+  from
+    dual
+  UNION ALL
+  SELECT
+    vol_start + 50 as vol_inter
+  FROM
+    cte_1
+  WHERE
+    vol_start + 50 <= 1000
+) 
+
+-- just count checks that less then min volume (previous value + 50 liters: 50 in vol_start is equivalent to 0-50 range)
+-- for each check
+SELECT
+  less_then_ltr,
+  COUNT (DISTINCT cheque_id) AS chck_amount
+FROM
+  -- here is the table with chck_id, min volume (range vol_start-50...vol_start), real vol from check
+  (
+    SELECT
+      cheque_id,
+      min(vol_start) OVER(PARTITION BY cheque_id) AS less_then_ltr,
+      ltr_vol
+    from
+      cte_1
+      INNER JOIN cte 
+      -- this condition excluding check volumes from volume range if they are higher than upper range (vol_start)
+      -- Fro instance: fuel volume from check = 84 that is higher than 50, so there is NO range 0-50 (vol_start = 50) in this table
+      -- for this volume. It start with vol_start = 100. But on the contrary there will be all higher intervals (150, 200,...1000)
+      -- fro volume 84
+      ON cte.ltr_vol <= cte_1.vol_start
+  )
+GROUP BY
+  less_then_ltr;
+
   ------------------------------------------------------------
 
 
