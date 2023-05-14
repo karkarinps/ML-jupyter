@@ -1,3 +1,76 @@
+with cte as (
+  select
+    unnest(product_ids) as product_id
+  from
+    orders
+  where
+    order_id not in (
+      SELECT
+        order_id
+      FROM
+        user_actions
+      WHERE
+        action = 'cancel_order'
+    )
+),
+cte_1 as (
+  select
+    distinct(name) as product_name,
+    SUM(price) over(partition by name) as revenue
+  from
+    cte
+    join products using(product_id)
+  order by
+    revenue desc
+),
+cte_2 as (
+  select
+    *,
+    CASE
+      when ROUND(revenue * 100 /(sum(revenue) over()), 2) < 0.5 then revenue
+      else 0
+    end as less_half,
+    CASE
+      when ROUND(revenue * 100 /(sum(revenue) over()), 2) >= 0.5 then revenue
+      else 0
+    end as great_half
+  from
+    cte_1
+),
+cte_3 as (
+  select
+    'ДРУГОЕ' as product_name,
+    sum(less_half) over() as revenue
+  from
+    cte_2
+  limit
+    1
+)
+select
+  *,
+  ROUND(revenue * 100 /(sum(revenue) over()), 2) as share_in_revenue
+from
+  (
+    select
+      product_name,
+      revenue
+    from
+      cte_2
+    where
+      great_half > 0
+    union
+    select
+      product_name,
+      revenue
+    from
+      cte_3
+  ) q
+order by
+  revenue desc;
+
+  ------------------------------------------------------
+
+
 -- Create table
 CREATE TABLE TABLE_TRANSACT$(
   BUSINESS_DT date NOT NULL,
