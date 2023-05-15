@@ -1,4 +1,31 @@
 
+"""roman to int"""
+def romanToInt(s):
+    dict_rom = {'I': 1,
+        'V': 5,
+        'X': 10,
+        'L': 50,
+        'C': 100,
+        'D': 500,
+        'M': 1000}
+    rom_list = list(s)
+    int_list = []
+    for i in rom_list:
+        int_list.append(dict_rom[i])
+    int_list.append(0)
+    int_sort = []
+    for j in range(len(int_list)-1):
+        if int_list[j] >= int_list[j+1]:
+            int_sort.append(int_list[j])
+        else:
+            int_sort.append(-int_list[j])
+
+    return print(sum(int_sort))
+
+s = 'MCMXCIV'
+romanToInt(s)
+
+
 -----------------------------------------------------------------
 from functools import reduce
 with open('logfile.txt', 'r', encoding='utf-8') as f_1, open('output.txt', 'w', encoding='utf-8') as out_1:
