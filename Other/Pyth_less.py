@@ -1,3 +1,23 @@
+"""fizzBuzz"""
+
+class Solution:
+    def fizzBuzz(self, n: int) -> list[str]:
+        n_list = [i for i in range(1, n+1)]
+        for i in n_list:
+            if i%15==0:
+                n_list[i-1] = 'FizzBuzz'
+            elif i%5==0:
+                n_list[i-1] = 'Buzz'
+            elif i%3==0:
+                n_list[i-1] = 'Fizz'
+        n_list_2 = [str(i) for i in n_list]
+        return print(n_list_2)
+
+p = Solution()
+p.fizzBuzz(15)
+
+--------------------------------------
+
 """Ransom Note"""
 
 class Solution:
