@@ -1,3 +1,22 @@
+"""Ransom Note"""
+
+class Solution:
+    def canConstruct(self, ransomNote: str, magazine: str) -> bool:
+        ran_list = list(ransomNote)
+        [ran_list.remove(i) for i in magazine if i in ran_list]
+        res = ''
+        if len(ran_list) == 0:
+            res = True
+        else:
+            res = False
+        return print(res)
+        
+p = Solution()
+p.canConstruct(ransomNote = 'aa', magazine = 'aab')
+
+-----------------------------------------------------------
+
+
 """Палиндром?"""
 
 def isPalindrome(head):
