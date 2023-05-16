@@ -1,3 +1,25 @@
+"""Палиндром?"""
+
+def isPalindrome(head):
+    head_list = list(head)
+    res = ''
+    if len(head_list)%2 == 0:
+        if head_list[:int(len(head_list)/2)] == head_list[int(len(head_list)/2):][::-1]:
+            res = True
+        else:
+            res = False
+    else:
+        if head_list[:int(len(head_list)//2)] == head_list[int((len(head_list)//2)+1):][::-1]:
+            res = True
+        else:
+            res = False
+    return print(res)
+
+head = '1234321'
+isPalindrome(head)
+
+------------------------------------------
+
 
 """roman to int"""
 def romanToInt(s):
