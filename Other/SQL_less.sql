@@ -1729,6 +1729,25 @@ GROUP BY
 
   ------------------------------------------------------------
 
-
+select
+  max(salary) as SecondHighestSalary
+from
+  (
+    select
+      salary
+    from
+      (
+        select
+          salary,
+          dense_rank() over(
+            order by
+              salary DESC
+          ) as sal_rank
+        from
+          Employee
+      )
+    where
+      sal_rank = 2
+  );
 
   -------------------------------------------------------------------

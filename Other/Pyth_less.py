@@ -1,3 +1,25 @@
+""" Middle of the Linked List """
+
+class Solution:
+    def middleNode(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        listHead = []
+        while head:
+            listHead.append(head.val)
+            head = head.next
+        res_list = listHead[range((len(listHead)//2)+1)[-1]:]
+        
+        head = ListNode(res_list[0])
+        tail = head
+        e = 1
+        while e < len(res_list):
+            tail.next = ListNode(res_list[e])
+            tail = tail.next
+            e+=1
+
+        return head
+    
+---------------------------------------------------------------
+
 """fizzBuzz"""
 
 class Solution:
