@@ -1,3 +1,13 @@
+"""The K Weakest Rows in a Matrix"""
+
+class Solution:
+    def kWeakestRows(self, mat: List[List[int]], k: int) -> List[int]:
+        res = [(mat[i].count(1),i) for i in range(len(mat))]
+        res_1 = sorted(res)
+        last_res = [res_1[i][1] for i in range(k)]
+        return last_res
+
+------------------------------------------------
 """ Middle of the Linked List """
 
 class Solution:
