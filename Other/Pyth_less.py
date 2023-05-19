@@ -1,3 +1,20 @@
+"""Number of Steps to Reduce a Number to Zero"""
+
+class Solution:
+    def numberOfSteps(self, num: int) -> int:
+        n = 0
+        while num>0:
+            if num%2==0:
+                num = num//2
+            elif num%2!=0:
+                num-=1
+            n += 1
+        return n
+    
+
+---------------------------------------------------
+
+
 """The K Weakest Rows in a Matrix"""
 
 class Solution:
