@@ -1763,3 +1763,39 @@ BEGIN
 END;
 
 ---------------------------------------------------------------------
+
+"""Consecutive Numbers"""
+
+select
+  distinct(
+    case) as ConsecutiveNums
+    from
+      (
+        select
+          case
+            when num = rank1
+            and num = rank2 then num
+          end case
+            from
+              (
+                select
+                  id,
+                  num,
+                  lag(num) over(
+                    order by
+                      id
+                  ) as rank1,
+                  lag(num, 2) over(
+                    order by
+                      id
+                  ) as rank2
+                from
+                  Logs
+              )
+          )
+        where
+          case
+            is not null
+
+
+--------------------------------------------------------------
