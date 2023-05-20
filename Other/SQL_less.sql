@@ -1857,3 +1857,27 @@ where
   salary = max_sal
 
 -----------------------------------------------------
+
+select
+  e.name as Department,
+  q.name as Employee,
+  salary
+from
+  (
+    select
+      name,
+      salary,
+      departmentId,
+      dense_rank() over(
+        partition by departmentId
+        order by
+          salary desc
+      ) as sal_rank
+    from
+      Employee
+  ) q
+  inner join Department e on q.departmentId = e.id
+where
+  sal_rank <= 3
+
+------------------------------------------------------
