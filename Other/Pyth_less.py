@@ -1,3 +1,26 @@
+"""Two Sum"""
+
+class Solution:
+    def twoSum(self, nums: List[int], target: int) -> List[int]:
+        for i in range(len(nums)):
+            for j in nums:
+                if nums[i]+j==target and i!=nums.index(j):
+                    return [i, nums.index(j)]
+
+-------------------------------------------------------------------------
+
+"""Richest Customer Wealth"""
+
+class Solution:
+    def maximumWealth(self, accounts: List[List[int]]) -> int:
+        n = 0
+        for i in accounts:
+            if sum(i)>n:
+                n = sum(i)
+        return n
+
+--------------------------------------------------------------
+
 """Number of Steps to Reduce a Number to Zero"""
 
 class Solution:

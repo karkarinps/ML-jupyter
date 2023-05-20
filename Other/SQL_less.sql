@@ -1799,3 +1799,61 @@ select
 
 
 --------------------------------------------------------------
+
+select
+  name as Employee
+from
+  (
+    select
+      name,
+      salary,
+      managerId
+    from
+      Employee
+  ) e
+  join (
+    select
+      id,
+      salary as sal
+    from
+      Employee
+  ) m on e.managerId = m.id
+where
+  salary > sal
+
+-----------------------------------------------------------
+
+select
+  distinct(email)
+from
+  (
+    select
+      email,
+      count(email) over(partition by email) as count
+    from
+      Person
+  )
+where
+  count > 1
+
+  ---------------------------------------------------
+
+  select
+  e.name as Department,
+  q.name as Employee,
+  salary
+from
+  (
+    select
+      name,
+      departmentId,
+      salary,
+      max(salary) over(partition by departmentId) as max_sal
+    from
+      Employee
+  ) q
+  inner join Department e on q.departmentId = e.id
+where
+  salary = max_sal
+
+-----------------------------------------------------
