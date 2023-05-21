@@ -1881,3 +1881,83 @@ where
   sal_rank <= 3
 
 ------------------------------------------------------
+
+select
+  id
+from
+  (
+    select
+      id,
+      temperature,
+      lag(temperature, 1) over(
+        order by
+          recordDate
+      ) as prev_temp,
+      recordDate,
+      lag(recordDate, 1) over(
+        order by
+          recordDate
+      ) as prev_date
+    from
+      Weather
+  )
+where
+  temperature > prev_temp
+  and recordDate - prev_date = 1
+
+
+-----------------------------------------------------
+
+with cte as (
+  select
+    users_id
+  from
+    Users
+  where
+    banned = 'Yes'
+)
+select
+  distinct request_at as Day,
+  coalesce(
+    round(
+      canc / count(status) over(partition by request_at),
+      2
+    ),
+    0
+  ) as "Cancellation Rate"
+from
+  Trips
+  left join (
+    select
+      request_at,
+      count(status) as canc
+    from
+      Trips
+    where
+      client_id not in (
+        select
+          *
+        from
+          cte
+      )
+      and status in ('cancelled_by_driver', 'cancelled_by_client')
+    group by
+      request_at
+  ) using(request_at)
+where
+  client_id not in (
+    select
+      *
+    from
+      cte
+  )
+  and driver_id not in (
+    select
+      *
+    from
+      cte
+  )
+  and request_at >= '2013-10-01'
+  and request_at <= '2013-10-03'
+
+  ------------------------------------------
