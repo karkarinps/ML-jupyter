@@ -1982,3 +1982,51 @@ from
   and manag >= 5
 
   -----------------------------------------------------
+
+  with cte as (
+  select
+    count(tiv_2015) over(partition by tiv_2015) as same_tiv,
+    tiv_2016,
+    concat(lat, lon) as coord
+  from
+    Insurance
+),
+cte_2 as (
+  select
+    TIV_2016,
+    same_tiv,
+    count(coord) over(partition by coord) as same_coord
+  from
+    cte
+)
+select
+  sum(TIV_2016) as tiv_2016
+from
+  cte_2
+where
+  same_tiv > 1
+  and SAME_COORD = 1
+
+
+------------------------------------------------------
+
+with cte as (
+  select
+    distinct customer_number,
+    count(customer_number) over(partition by customer_number) as hdaj
+  from
+    Orders
+)
+select
+  CUSTOMER_NUMBER
+from
+  cte
+where
+  hdaj =(
+    select
+      max(hdaj)
+    from
+      cte
+  )
+
+------------------------------------------
