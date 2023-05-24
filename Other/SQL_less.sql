@@ -1961,3 +1961,24 @@ where
   and request_at <= '2013-10-03'
 
   ------------------------------------------
+
+  select
+  name
+from
+  (
+    select
+      distinct managerId as id,
+      count(managerId) over(partition by managerId) as manag
+    from
+      Employee
+  ) q
+  join (
+    select
+      id,
+      name
+    from
+      Employee
+  ) e on q.id = e.id
+  and manag >= 5
+
+  -----------------------------------------------------

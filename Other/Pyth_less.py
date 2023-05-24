@@ -1,3 +1,37 @@
+"""Add Two Numbers"""
+
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+class Solution:
+    def addTwoNumbers(self, l1: Optional[ListNode], l2: Optional[ListNode]) -> Optional[ListNode]:
+        list_l1 = []
+        list_l2 = []
+        while l1:
+            list_l1.append(str(l1.val))
+            l1 = l1.next
+        
+        while l2:
+            list_l2.append(str(l2.val))
+            l2 = l2.next
+        
+        res_list = [int(i) for i in list(str(int(''.join(list_l1[::-1])) + int(''.join(list_l2[::-1]))))[::-1]]
+        
+        head = ListNode(res_list[0])
+        tail = head
+        e = 1
+        while e < len(res_list):
+            tail.next = ListNode(res_list[e])
+            tail = tail.next
+            e+=1
+
+        return head
+
+--------------------------------------------------
+
+
 """Two Sum"""
 
 class Solution:
