@@ -1,3 +1,19 @@
+"""Longest Substring Without Repeating Characters"""
+
+class Solution:
+    def lengthOfLongestSubstring(self, s: str) -> int:
+        res = [s[i: j] for i in range(len(s)) for j in range(i + 1, len(s) + 1)]
+        res.sort(key=lambda x:len(x), reverse=True)
+        
+        for i in res:
+            if len(set(i))==len(i) and len(i):
+                return len(i)
+                break
+            
+        return 0
+    
+------------------------------------------
+
 """Add Two Numbers"""
 
 # Definition for singly-linked list.

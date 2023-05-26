@@ -2030,3 +2030,49 @@ where
   )
 
 ------------------------------------------
+
+select
+  class
+from
+  (
+    select
+      class,
+      count(student) as st_cnt
+    from
+      Courses
+    group by
+      class
+    having
+      count(student) >= 5
+  )
+
+----------------------------------------------
+
+with cte as (
+  select
+    sales_id
+  from
+    Orders
+  where
+    com_id in (
+      select
+        com_id
+      from
+        Company
+      where
+        name = 'RED'
+    )
+)
+select
+  name
+from
+  SalesPerson
+where
+  sales_id not in (
+    select
+      *
+    from
+      cte
+  )
+
+----------------------------------------
