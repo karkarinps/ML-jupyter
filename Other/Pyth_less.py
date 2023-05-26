@@ -1,3 +1,24 @@
+"""Longest Common Prefix"""
+
+class Solution:
+    def longestCommonPrefix(self, strs: List[str]) -> str:
+        longest = max(strs, key=len)
+        for i in range(len(strs)):
+            if longest:
+                long_2 = ''
+                for j in range(len(strs[i])):
+                    if j+1<=len(longest) and strs[i][j]==longest[j]:
+                        long_2+=strs[i][j]
+                    else:
+                        break
+                longest = long_2
+            else:
+                break     
+        return longest
+    
+----------------------------------------------
+
+
 """Longest Substring Without Repeating Characters"""
 
 class Solution:
