@@ -2076,3 +2076,44 @@ where
   )
 
 ----------------------------------------
+
+with cte as (
+  select
+    requester_id
+  from
+    RequestAccepted
+  union all
+  select
+    accepter_id
+  from
+    RequestAccepted
+),
+cte_1 as (
+  select
+    requester_id as id,
+    count(requester_id) as num
+  from
+    cte
+  group by
+    REQUESTER_ID
+),
+cte_2 as (
+  select
+    max(num)
+  from
+    cte_1
+)
+select
+  id,
+  num
+from
+  cte_1
+where
+  num =(
+    select
+      *
+    from
+      cte_2
+  )
+
+---------------------------------------------
