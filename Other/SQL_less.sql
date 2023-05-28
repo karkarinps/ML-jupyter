@@ -2117,3 +2117,94 @@ where
   )
 
 ---------------------------------------------
+
+with cte as(
+  select
+    id,
+    'Root' as type
+  from
+    Tree
+  where
+    p_id is null
+),
+cte_2 as(
+  select
+    distinct p_id as id,
+    'Inner' as type
+  from
+    Tree
+  where
+    p_id is not null
+    and p_id not in (
+      select
+        id
+      from
+        cte
+    )
+),
+cte_3 as(
+  select
+    distinct p_id
+  from
+    Tree
+  where
+    p_id is not null
+),
+cte_4 as(
+  select
+    id,
+    'Leaf' as type
+  from
+    Tree
+  where
+    id not in (
+      select
+        *
+      from
+        cte_3
+    )
+    and p_id is not null
+)
+select
+  *
+from
+  cte
+union
+select
+  *
+from
+  cte_2
+union
+select
+  *
+from
+  cte_4
+
+--------------------------------------------
+
+select
+  id,
+  case
+    when p_id is null then 'Root'
+    when id in (
+      select
+        distinct p_id
+      from
+        Tree
+      where
+        p_id is not null
+        and p_id not in (
+          select
+            id
+          from
+            Tree
+          where
+            p_id is null
+        )
+    ) then 'Inner'
+    else 'Leaf'
+  end as type
+from
+  Tree
+
+-----------------------------------------
