@@ -1,3 +1,18 @@
+"""Valid Parentheses"""
+s = '()[]'
+par_dict = {'(':1, ')':-1, '{':1, '}':-1, '[':1, ']':-1}
+l = [0, 0, 0, 0, 0, 0]
+for i in s:
+    l[list(par_dict).index(i)] += par_dict[i]
+    if sum(l) < 0:
+        break
+if sum(l[:2])==sum(l[2:4])==sum(l[4:6]):
+    print(True)
+else:
+    print(False)
+
+---------------------------------------
+
 """Longest Common Prefix"""
 
 class Solution:
