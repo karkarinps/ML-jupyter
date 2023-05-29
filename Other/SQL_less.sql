@@ -2208,3 +2208,16 @@ from
   Tree
 
 -----------------------------------------
+
+select
+  x,
+  y,
+  z,
+  case
+    when x + y + z -2 * greatest(x, y, z) <= 0 then 'No'
+    else 'Yes'
+  end as triangle
+from
+  Triangle
+
+-------------------------------------
