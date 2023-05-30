@@ -2244,3 +2244,25 @@ from
   )
 
 ---------------------------------------
+
+select
+  coalesce(
+    case
+      when mod(id, 2) <> 0 then lead(id) over(
+        order by
+          id
+      )
+      else lag(id) over(
+        order by
+          id
+      )
+    end,
+    id
+  ) as id,
+  student
+from
+  Seat
+order by
+  id asc
+
+-----------------------------------------------------

@@ -32,6 +32,19 @@ class Solution:
             return ListNode('')
         
 ----------------------------------------------------
+"""Length of Last Word"""
+
+class Solution:
+    def lengthOfLastWord(self, s: str) -> int:
+        cnt = 0
+        for i in s.rstrip()[::-1]:
+            if i!=' ':
+                cnt+=1
+            else:
+                break
+        return cnt
+
+----------------------------------------------------
 
 
 """Valid Parentheses"""
@@ -596,3 +609,11 @@ for i in range(num_1, num_2+1):
         sum_div = sum_div_syc
         num_div = i
 print(num_div, sum_div, sep = ' ') """
+
+--------------------------------
+
+class Solution:
+    def plusOne(self, digits: List[int]) -> List[int]:
+        return map(int, list(str(int(''.join(map(str, digits)))+1)))
+    
+------------------------------------
