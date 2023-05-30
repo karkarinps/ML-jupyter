@@ -1,3 +1,39 @@
+"""Merge Two Sorted Lists"""
+
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+class Solution:
+    def mergeTwoLists(self, list1: Optional[ListNode], list2: Optional[ListNode]) -> Optional[ListNode]:
+        list_l1 = []
+        list_l2 = []
+        while list1:
+            list_l1.append(str(list1.val))
+            list1 = list1.next
+        
+        while list2:
+            list_l2.append(str(list2.val))
+            list2 = list2.next
+        
+        res_list=list_l1+list_l2
+        res_list.sort(key=lambda x: int(x))
+        if res_list:
+            head = ListNode(res_list[0])
+            tail = head
+            e = 1
+            while e < len(res_list):
+                tail.next = ListNode(res_list[e])
+                tail = tail.next
+                e+=1
+            return head
+        else:
+            return ListNode('')
+        
+----------------------------------------------------
+
+
 """Valid Parentheses"""
 s = '{[]}'
 par_dict = {'(':1, ')':-1, '{':1, '}':-1, '[':1, ']':-1}
