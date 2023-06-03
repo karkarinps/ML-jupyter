@@ -1,3 +1,30 @@
+"""Best Time to Buy and Sell Stock - On*2 complexity"""
+
+class Solution:
+    def maxProfit(self, prices: List[int]) -> int:
+        d = 0
+        for i in range(len(prices)):
+            k = max(prices[i:]) - prices[i:][0]
+            if k>d:
+                d=k
+        return d
+
+"""Best Time to Buy and Sell Stock - BRUTE FORCE On**2 complexity"""
+
+class Solution:
+    def maxProfit(self, prices: List[int]) -> int:
+        d = [0]
+        for i in prices:
+            dd = []
+            for j in prices[prices.index(i)+1:]:
+                if i-j<0:
+                    dd.append(j-i)
+            if dd:
+                d.append(max(dd))
+        return max(d)
+
+---------------------------------------------------------
+
 """Remove Duplicates from Sorted List"""
 
 class Solution:

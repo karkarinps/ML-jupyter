@@ -2266,3 +2266,32 @@ order by
   id asc
 
 -----------------------------------------------------
+
+with cte as(
+  select
+    count(product_key)
+  from
+    Product
+),
+cte_1 as(
+  select
+    customer_id,
+    count(distinct product_key) as cnt_key
+  from
+    Customer
+  group by
+    customer_id
+)
+select
+  customer_id
+from
+  cte_1
+where
+  cnt_key =(
+    select
+      *
+    from
+      cte
+  )
+
+-----------------------------------------------
