@@ -1,3 +1,26 @@
+"""Remove Duplicates from Sorted List"""
+
+class Solution:
+    def deleteDuplicates(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        if not head:
+            return ListNode('')
+        l = set()
+        while head:
+            l.add(head.val)
+            head = head.next
+        res_list = list(l)
+        res_list.sort()
+        head = ListNode(res_list[0])
+        tail = head
+        e = 1
+        while e < len(res_list):
+            tail.next = ListNode(res_list[e])
+            tail = tail.next
+            e+=1
+        return head
+
+------------------------------------------------
+
 """Merge Two Sorted Lists"""
 
 # Definition for singly-linked list.
