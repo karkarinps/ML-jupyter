@@ -1,3 +1,32 @@
+"""Can Make Arithmetic Progression From Sequence - On"""
+
+class Solution:
+    def canMakeArithmeticProgression(self, arr: List[int]) -> bool:
+        arr.sort()
+        k=arr[1]-arr[0]
+        for i in range(len(arr)):
+            if arr[i]!=arr[-1] and arr[i+1]-arr[i]!=k:
+                return False
+        return True
+
+------------------------------------------------------------
+"""Can Make Arithmetic Progression From Sequence - On"""
+
+class Solution:
+    def canMakeArithmeticProgression(self, arr: List[int]) -> bool:
+        k = min(arr)
+        arr_1 = arr
+        arr_1.remove(k)
+        n = min(arr_1)-k
+        print(n, k)
+        for i in range(len(arr)):
+            k = min(arr_1)
+            arr_1.remove(k)
+            if arr_1 and min(arr_1)-k != n:
+                return False
+        return True 
+
+-------------------------------------------------------------
 """Best Time to Buy and Sell Stock - On*2 complexity"""
 
 class Solution:

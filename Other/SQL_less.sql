@@ -2295,3 +2295,59 @@ where
   )
 
 -----------------------------------------------
+
+with cte as(
+  select
+    product_id,
+    min(year) as first_year
+  from
+    sales
+  group by
+    product_id
+)
+select
+  q.product_id,
+  first_year,
+  quantity,
+  price
+from
+  (
+    select
+      *
+    from
+      cte
+  ) q
+  join (
+    select
+      product_id,
+      year,
+      quantity,
+      price
+    from
+      sales
+  ) e on q.product_id = e.product_id
+  and q.first_year = e.year
+
+  ---------------------------------------------
+
+  with cte as(
+  select
+    product_id,
+    year,
+    min(year) over(partition by product_id) as first_year,
+    quantity,
+    price
+  from
+    Sales
+)
+select
+  product_id,
+  first_year,
+  quantity,
+  price
+from
+  cte
+where
+  year = first_year
+
+-----------------------------------------------
