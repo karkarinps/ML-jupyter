@@ -9,7 +9,7 @@ from datetime import datetime, timezone, timedelta
 in_path = Path('city.txt')
 out_path = 'dfsavename.csv.gz'
 api_url = 'https://api.openweathermap.org/data/2.5/weather'
-appid = '6bdf631749bac572e4d629194e6cced1'
+appid = ''
 units = 'metric'
 lang = 'ru'
 # настраиваем временную зону под нужную (3.0 - это по Мск.)
