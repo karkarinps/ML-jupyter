@@ -2351,3 +2351,129 @@ where
   year = first_year
 
 -----------------------------------------------
+
+-- Первое задание
+
+WITH cte AS(
+  SELECT
+    DISTINCT customer_id
+  FROM
+    fact_order
+)
+SELECT
+  *
+FROM
+  dim_customer
+WHERE
+  customer_id NOT IN (
+    SELECT
+      *
+    FROM
+      cte
+  );
+
+
+-- Второе задание вариант 1.
+-- Выводит не более 3х заказов на клиента, 
+-- если есть 2 заказа одинаковой стоимостью, входящих в тройку топовых
+
+WITH cte AS(
+  SELECT
+    order_id,
+    order_position_id,
+    customer_id,
+    amount
+  FROM
+    (
+      SELECT
+        *,
+        ROW_NUMBER() OVER(
+          PARTITION BY customer_id
+          ORDER BY
+            amount DESC
+        ) AS am_rank
+      FROM
+        fact_order
+    ) q
+  WHERE
+    am_rank <= 3
+)
+SELECT
+  *
+FROM
+  (
+    SELECT
+      *
+    FROM
+      cte
+  ) e
+  INNER JOIN dim_customer s ON e.customer_id = s.customer_id;
+
+
+-- Второе задание вариант 2.
+-- Выводит 3 топовых заказа, БОЛЕЕ 3х из топ-3 по amount заказов на 1 клиента, 
+-- если есть 2 заказа одинаковой стоимостью, входящих в тройку топовых
+
+WITH cte AS(
+  SELECT
+    order_id,
+    order_position_id,
+    customer_id,
+    amount
+  FROM
+    (
+      SELECT
+        *,
+        DENSE_RANK() OVER(
+          PARTITION BY customer_id
+          ORDER BY
+            amount DESC
+        ) AS am_rank
+      FROM
+        fact_order
+    ) q
+  WHERE
+    am_rank <= 3
+)
+SELECT
+  *
+FROM
+  (
+    SELECT
+      *
+    FROM
+      cte
+  ) e
+  INNER JOIN dim_customer s ON e.customer_id = s.customer_id;
+
+
+-- Третье задание
+
+WITH cte AS(
+  SELECT
+    CASE
+      WHEN COALESCE(
+        LEAD(numbers) OVER(
+          ORDER BY
+            numbers
+        ),
+        numbers + 1
+      ) <> numbers + 1
+      OR COALESCE(
+        LAG(numbers) OVER(
+          ORDER BY
+            numbers
+        ),
+        numbers -1
+      ) <> numbers -1 THEN numbers
+    END AS nums
+  FROM
+    numbers
+)
+SELECT
+  *
+FROM
+  cte
+WHERE
+  nums IS NOT NULL;
+----------------------------------------------------
