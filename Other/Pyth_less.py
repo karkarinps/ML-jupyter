@@ -1,3 +1,25 @@
+"""Longest Palindromic Substring"""
+
+class Solution:
+    def longestPalindrome(self, s: str) -> str:
+        if len(s)==1 or s==s[::-1]:
+            return s
+        longest = ''
+        for i in range(len(s)):
+            if (s[:-i]==s[:-i][::-1] and s[:-i] and len(longest)<len(s[:-i])):
+                longest = s[:-i]
+            if s[i:]==s[i:][::-1] and s[i:] and len(longest)<len(s[i:]):
+                longest = s[i:]            
+            for j in range(len(s[:-i])):               
+                if s[:-i][j:]==s[:-i][j:][::-1] and s[:-i][j:] and len(longest)<len(s[:-i][j:]):
+                    longest = s[:-i][j:]
+                if s[i:][:-j]==s[i:][:-j][::-1] and s[i:][:-j] and len(longest)<len(s[i:][:-j]):
+                    longest = s[i:][:-j]
+
+        return longest
+
+---------------------------------------
+
 """Can Make Arithmetic Progression From Sequence - On"""
 
 class Solution:
