@@ -1,3 +1,14 @@
+"Game Play Analysis IV"
+
+with cte as(
+  select count(dd) as cnt 
+  from (select DATEDIFF ( dd , min(event_date) over (partition by player_id), event_date ) as dd
+from Activity)q where dd = 1)
+
+select round(cast((select cnt from cte) as float)/(select count(distinct player_id) from Activity), 2) as fraction
+
+-------------------------------------------------------------------------
+
 with cte as (
   select
     unnest(product_ids) as product_id
